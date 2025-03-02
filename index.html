@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>High Contrast Voronoi Subway Map</title>
+    <script src="https://d3js.org/d3-delaunay.v6.min.js"></script>
+    <script src="https://d3js.org/d3-color.v2.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        body, html {
+            margin: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+        }
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <canvas id="canvas"></canvas>
+    <script>
+        const map = L.map('map').setView([59.3293, 18.0686], 14); // Center on Stockholm
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let width = window.innerWidth, height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+
+        function resizeCanvas() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            drawVoronoi();
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        async function fetchSubwayStops() {
+            const bounds = map.getBounds();
+            const query = `
+                [out:json];
+                node["railway"="station"]["subway"="yes"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+                out body;
+            `;
+            const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                return data.elements;
+            } catch (error) {
+                console.error('Error fetching subway stops:', error);
+                return [];
+            }
+        }
+
+        function generateDistinctColors(n) {
+            let colors = [];
+            const hueStep = 360 / n;
+            for (let i = 0; i < n; i++) {
+                colors.push(`hsl(${i * hueStep}, 80%, 50%)`);
+            }
+            return colors.sort(() => Math.random() - 0.5);
+        }
+
+        async function drawVoronoi() {
+            ctx.clearRect(0, 0, width, height);
+
+            const rawStops = await fetchSubwayStops();
+            if (rawStops.length === 0) return;
+
+            const colors = generateDistinctColors(rawStops.length);
+
+            const stops = rawStops.map((stop, index) => {
+                const point = map.latLngToContainerPoint([stop.lat, stop.lon]);
+                return { x: point.x, y: point.y, color: colors[index] };
+            });
+
+            const delaunay = new d3.Delaunay(stops.map(s => [s.x, s.y]).flat(Infinity));
+
+            const imageData = ctx.createImageData(width, height);
+            const data = imageData.data;
+
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const index = (y * width + x) * 4;
+                    const stopIndex = delaunay.find(x, y);
+                    const color = d3.color(stops[stopIndex].color).rgb(); // Correctly convert HSL to RGB
+
+                    data[index] = color.r;
+                    data[index + 1] = color.g;
+                    data[index + 2] = color.b;
+                    data[index + 3] = 100; // Adjust alpha for better visibility
+                }
+            }
+
+            ctx.putImageData(imageData, 0, 0);
+
+            ctx.globalCompositeOperation = "source-over";
+            ctx.strokeStyle = "white";
+            for (const stop of stops) {
+                ctx.beginPath();
+                ctx.arc(stop.x, stop.y, 6, 0, Math.PI * 2);
+                ctx.fillStyle = stop.color;
+                ctx.fill();
+                ctx.stroke();
+            }
+        }
+
+        map.on('moveend', drawVoronoi);
+        drawVoronoi();
+    </script>
+</body>
+</html>
