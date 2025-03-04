@@ -1,25 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>High Contrast Voronoi Subway Map</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-        crossorigin=""></script>
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <style>
-        body, html {
+        body,
+        html {
             margin: 0;
             height: 100%;
             overflow: hidden;
         }
+
         #map {
             width: 100%;
             height: 100%;
             position: absolute;
         }
+
         #canvas {
             position: absolute;
             top: 0;
@@ -29,6 +32,7 @@
         }
     </style>
 </head>
+
 <body>
     <div id="map"></div>
     <canvas id="canvas"></canvas>
@@ -91,7 +95,7 @@
             // return ['#e6194b', '#3cb44b', '#ffe119', '#4363d8']; // Red, Green, Yellow, Blue
             return d3.schemeCategory10;
         }
-        function generate_n_Colors(n=7) {
+        function generate_n_Colors(n = 7) {
             let colors = [];
             const hueStep = 360 / n;
             for (let i = 0; i < n; i++) {
@@ -205,4 +209,5 @@
         drawVoronoi();
     </script>
 </body>
+
 </html>
