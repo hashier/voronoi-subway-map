@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>High Contrast Voronoi Subway Map</title>
-    <script src="https://d3js.org/d3.v7.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -30,7 +29,10 @@
 <body>
     <div id="map"></div>
     <canvas id="canvas"></canvas>
-    <script>
+    <script type="module">
+
+        import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
+
         const map = L.map('map').setView([59.3293, 18.0686], 14); // Center on Stockholm
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors'
@@ -137,7 +139,7 @@
                     const color = d3.color(colors[stopIndex]);
 
                     if (color) {
-                        colorRgb = color.rgb();
+                        const colorRgb = color.rgb();
                         data[index] = colorRgb.r;
                         data[index + 1] = colorRgb.g;
                         data[index + 2] = colorRgb.b;
@@ -160,6 +162,7 @@
                 ctx.fill();
                 ctx.stroke();
             }
+            console.log("Drawing Voronoi finished");
         }
 
         map.on('moveend', drawVoronoi);
