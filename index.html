@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>High Contrast Voronoi Subway Map</title>
-    <script src="https://d3js.org/d3-delaunay.v6.min.js"></script>
-    <script src="https://d3js.org/d3-color.v2.min.js"></script>
+    <script src="https://d3js.org/d3.v7.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -56,7 +55,7 @@
             const bounds = map.getBounds();
             const query = `
                 [out:json];
-                node["railway"="station"]["subway"="yes"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+                node["station"="subway"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
                 out body;
             `;
             const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
@@ -70,7 +69,11 @@
             }
         }
 
-        function generateDistinctColors(n) {
+        function generateColors() {
+            // return ['#e6194b', '#3cb44b', '#ffe119', '#4363d8']; // Red, Green, Yellow, Blue
+            return d3.schemeCategory10;
+        }
+        function generate_n_Colors(n=7) {
             let colors = [];
             const hueStep = 360 / n;
             for (let i = 0; i < n; i++) {
@@ -79,20 +82,50 @@
             return colors.sort(() => Math.random() - 0.5);
         }
 
+        function assignColors(stops, delaunay) {
+            const colors = generateColors();
+            const assignedColors = new Array(stops.length).fill(null);
+
+            for (let i = 0; i < stops.length; i++) {
+                const neighbors = delaunay.neighbors(i);
+                const usedColors = new Set();
+
+                for (const neighbor of neighbors) {
+                    if (assignedColors[neighbor] !== null) {
+                        usedColors.add(assignedColors[neighbor]);
+                    }
+                }
+
+                for (const color of colors) {
+                    if (!usedColors.has(color)) {
+                        assignedColors[i] = color;
+                        break;
+                    }
+                }
+
+                // Ensure that a color has been assigned
+                if (assignedColors[i] === null) {
+                    console.error(`Failed to assign color to stop ${i}`);
+                }
+            }
+
+            return assignedColors;
+        }
+
         async function drawVoronoi() {
+            console.log("Drawing Voronoi");
             ctx.clearRect(0, 0, width, height);
 
             const rawStops = await fetchSubwayStops();
             if (rawStops.length === 0) return;
 
-            const colors = generateDistinctColors(rawStops.length);
-
             const stops = rawStops.map((stop, index) => {
                 const point = map.latLngToContainerPoint([stop.lat, stop.lon]);
-                return { x: point.x, y: point.y, color: colors[index] };
+                return { x: point.x, y: point.y };
             });
 
             const delaunay = new d3.Delaunay(stops.map(s => [s.x, s.y]).flat(Infinity));
+            const colors = assignColors(stops, delaunay);
 
             const imageData = ctx.createImageData(width, height);
             const data = imageData.data;
@@ -101,12 +134,17 @@
                 for (let x = 0; x < width; x++) {
                     const index = (y * width + x) * 4;
                     const stopIndex = delaunay.find(x, y);
-                    const color = d3.color(stops[stopIndex].color).rgb(); // Correctly convert HSL to RGB
+                    const color = d3.color(colors[stopIndex]);
 
-                    data[index] = color.r;
-                    data[index + 1] = color.g;
-                    data[index + 2] = color.b;
-                    data[index + 3] = 100; // Adjust alpha for better visibility
+                    if (color) {
+                        colorRgb = color.rgb();
+                        data[index] = colorRgb.r;
+                        data[index + 1] = colorRgb.g;
+                        data[index + 2] = colorRgb.b;
+                        data[index + 3] = 125; // Adjust alpha for better visibility
+                    } else {
+                        console.error(`Color assignment failed for stop index ${stopIndex}`);
+                    }
                 }
             }
 
@@ -114,10 +152,11 @@
 
             ctx.globalCompositeOperation = "source-over";
             ctx.strokeStyle = "white";
-            for (const stop of stops) {
+            for (let i = 0; i < stops.length; i++) {
+                const stop = stops[i];
                 ctx.beginPath();
                 ctx.arc(stop.x, stop.y, 6, 0, Math.PI * 2);
-                ctx.fillStyle = stop.color;
+                ctx.fillStyle = colors[i];
                 ctx.fill();
                 ctx.stroke();
             }
