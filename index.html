@@ -74,7 +74,7 @@
             height = window.innerHeight;
             canvas.width = width;
             canvas.height = height;
-            drawVoronoi();
+            moveEnd();
         }
         window.addEventListener('resize', resizeCanvas);
 
@@ -90,7 +90,7 @@
                 console.log("Fetching subway stops…");
                 const response = await fetch(url);
                 const data = await response.json();
-                console.log("Done")
+                console.log("Fetching done")
                 return data.elements;
             } catch (error) {
                 console.error('Error fetching subway stops:', error);
@@ -157,7 +157,7 @@
             if (skipVoronoi) {
                 return;
             }
-            console.log("Drawing Voronoi");
+            console.log("Drawing Voronoi…");
             ctx.clearRect(0, 0, width, height);
 
             const rawStops = await fetchSubwayStops();
@@ -174,6 +174,7 @@
             const imageData = ctx.createImageData(width, height);
             const data = imageData.data;
 
+            console.log("Coloring canvas…");
             for (let y = 0; y < height; y++) {
                 for (let x = 0; x < width; x++) {
                     const index = (y * width + x) * 4;
@@ -191,6 +192,7 @@
                     }
                 }
             }
+            console.log("Coloring done");
 
             ctx.putImageData(imageData, 0, 0);
 
@@ -204,15 +206,16 @@
                 ctx.fill();
                 ctx.stroke();
             }
-            console.log("Drawing Voronoi finished");
+            console.log("Drawing Voronoi done");
         }
 
-        function moveend() {
+        // Map moved
+        function moveEnd() {
             updateURL();
             drawVoronoi();
         }
+        map.on('moveend', moveEnd);
 
-        map.on('moveend', moveend);
         drawVoronoi();
     </script>
 </body>
