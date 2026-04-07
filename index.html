@@ -202,11 +202,12 @@
         const errorBanner = document.getElementById('error-banner');
         let errorTimeout = null;
 
-        function showError(msg) {
+        function showBanner(msg, { color = '#d32f2f', duration = 8000 } = {}) {
             clearTimeout(errorTimeout);
             errorBanner.textContent = msg;
+            errorBanner.style.background = color;
             errorBanner.classList.add('visible');
-            errorTimeout = setTimeout(() => errorBanner.classList.remove('visible'), 8000);
+            errorTimeout = setTimeout(() => errorBanner.classList.remove('visible'), duration);
         }
 
         function expandBounds(bounds, factor) {
@@ -249,7 +250,7 @@
                         ? `Overpass API timeout (504). The query may be too broad — try a smaller area or simpler mode.`
                         : `Overpass API error: ${response.status} ${response.statusText}`;
                     console.error(msg);
-                    showError(msg);
+                    showBanner(msg);
                     return [];
                 }
                 const data = await response.json();
@@ -267,7 +268,7 @@
                     return [];
                 }
                 console.error('Error fetching subway stops:', error);
-                showError(`Network error: ${error.message}`);
+                showBanner(`Network error: ${error.message}`);
                 return [];
             }
         }
@@ -340,7 +341,11 @@
             spinner.classList.add('visible');
             const rawStops = await fetchSubwayStops();
             spinner.classList.remove('visible');
-            if (rawStops.length === 0) return;
+            if (rawStops.length === 0) {
+                markerLayer.clearLayers();
+                showBanner('No stations found in this area. Try zooming out or switching query mode.', { color: '#555' });
+                return;
+            }
 
             const stops = rawStops.map((stop, index) => {
                 const point = map.latLngToContainerPoint([stop.lat, stop.lon]);
