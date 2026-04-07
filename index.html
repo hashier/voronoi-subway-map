@@ -63,10 +63,10 @@
             z-index: 1002;
             background: #d32f2f;
             color: white;
-            padding: 10px 20px;
-            border-radius: 4px;
+            padding: 14px 28px;
+            border-radius: 6px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-            font: 13px/1.5 sans-serif;
+            font: 16px/1.5 sans-serif;
             max-width: 80%;
             text-align: center;
         }
@@ -245,9 +245,9 @@
                 const response = await fetch(url, { signal: abortController.signal });
                 if (!response.ok) {
                     const msg = response.status === 429
-                        ? `Overpass API rate limit hit (429). Try again in a few seconds.`
+                        ? `Rate limit hit — slow down a bit and try again.`
                         : response.status === 504
-                        ? `Overpass API timeout (504). The query may be too broad — try a smaller area or simpler mode.`
+                        ? `504 Gateway Timeout`
                         : `Overpass API error: ${response.status} ${response.statusText}`;
                     console.error(msg);
                     showBanner(msg);
