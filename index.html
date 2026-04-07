@@ -84,6 +84,7 @@
         L.control.attribution()
             .addAttribution('<a href="https://github.com/hashier/voronoi-subway-map/">Webpage source code</a>')
             .addTo(map);
+        const markerLayer = L.layerGroup().addTo(map);
 
         // Canvas
         const canvas = document.getElementById('canvas');
@@ -265,15 +266,17 @@
 
             ctx.putImageData(imageData, 0, 0);
 
-            ctx.globalCompositeOperation = "source-over";
-            ctx.strokeStyle = "white";
-            for (let i = 0; i < stops.length; i++) {
-                const stop = stops[i];
-                ctx.beginPath();
-                ctx.arc(stop.x, stop.y, 6, 0, Math.PI * 2);
-                ctx.fillStyle = colors[i];
-                ctx.fill();
-                ctx.stroke();
+            markerLayer.clearLayers();
+            for (let i = 0; i < rawStops.length; i++) {
+                const stop = rawStops[i];
+                L.circleMarker([stop.lat, stop.lon], {
+                    radius: 6,
+                    fillColor: colors[i],
+                    color: 'white',
+                    weight: 1,
+                    fillOpacity: 1,
+                }).bindTooltip(stop.tags?.name || 'Unknown station')
+                  .addTo(markerLayer);
             }
             console.log("Drawing Voronoi done");
         }
