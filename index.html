@@ -330,12 +330,22 @@
         }
 
         const spinner = document.getElementById('spinner');
+        let canvasRefLatLng = null;
+        let canvasRefPoint = null;
+
+        map.on('move', () => {
+            if (canvasRefLatLng) {
+                const pt = map.latLngToContainerPoint(canvasRefLatLng);
+                canvas.style.transform = `translate(${pt.x - canvasRefPoint.x}px, ${pt.y - canvasRefPoint.y}px)`;
+            }
+        });
 
         async function drawVoronoi() {
             if (skipVoronoi) {
                 return;
             }
             console.log("Drawing Voronoi…");
+            canvas.style.transform = '';
             ctx.clearRect(0, 0, width, height);
 
             spinner.classList.add('visible');
@@ -392,6 +402,8 @@
                 }).bindTooltip(stop.tags?.name || 'Unknown station')
                   .addTo(markerLayer);
             }
+            canvasRefLatLng = map.getCenter();
+            canvasRefPoint = map.latLngToContainerPoint(canvasRefLatLng);
             console.log("Drawing Voronoi done");
         }
 
