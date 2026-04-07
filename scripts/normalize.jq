@@ -1,0 +1,1 @@
+.elements | map({lat: (.lat // .center.lat), lon: (.lon // .center.lon), name: .tags.name}) | map(select(.lat != null and .lon != null)) | sort_by([.lat, .lon])
