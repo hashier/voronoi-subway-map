@@ -67,11 +67,37 @@
         // Only for debugging
         const skipVoronoi = false
 
+        // Query modes
+        const bbox = (b) => `${b.getSouth()},${b.getWest()},${b.getNorth()},${b.getEast()}`;
+        const QUERY_MODES = {
+            'subway-nodes': {
+                label: 'Subway (nodes only)',
+                buildQuery: (b) => `[out:json];node["station"="subway"](${bbox(b)});out body;`,
+            },
+            'subway-all': {
+                label: 'Subway (all geometries)',
+                buildQuery: (b) => `[out:json];nwr["station"="subway"](${bbox(b)});out body center;`,
+            },
+            'subway-broad': {
+                label: 'Subway (broad match)',
+                buildQuery: (b) => `[out:json];(nwr["station"="subway"](${bbox(b)});nwr["railway"="station"]["subway"="yes"](${bbox(b)}););out body center;`,
+            },
+            'all-rail': {
+                label: 'All rail transit',
+                buildQuery: (b) => `[out:json];(nwr["station"="subway"](${bbox(b)});nwr["railway"="station"]["subway"="yes"](${bbox(b)});nwr["station"~"light_rail|monorail"](${bbox(b)});nwr["railway"~"tram_stop|halt"](${bbox(b)}););out body center;`,
+            },
+            'buses': {
+                label: 'Buses',
+                buildQuery: (b) => `[out:json];(nwr["highway"="bus_stop"](${bbox(b)});nwr["amenity"="bus_station"](${bbox(b)}););out body center;`,
+            },
+        };
+
         // URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         let lat = urlParams.get('lat') || 59.92;
         let lng = urlParams.get('long') || 10.75;
         let z = urlParams.get('z') || 14;
+        let currentMode = urlParams.get('mode') || 'subway-all';
 
         // Map
         const map = L.map('map', {
@@ -135,11 +161,8 @@
 
             const fetchBounds = expandBounds(bounds, 1.5);
             console.log("Fetching with expanded bounds:", fetchBounds.toBBoxString());
-            const query = `
-                [out:json];
-                node["station"="subway"](${fetchBounds.getSouth()},${fetchBounds.getWest()},${fetchBounds.getNorth()},${fetchBounds.getEast()});
-                out body;
-            `;
+            const query = QUERY_MODES[currentMode].buildQuery(fetchBounds);
+            console.log("Query mode:", currentMode);
             const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
             if (abortController) {
                 console.log("Aborting previous fetch");
@@ -152,7 +175,11 @@
                 const data = await response.json();
                 console.log("Fetching done");
                 cachedBounds = fetchBounds;
-                cachedStops = data.elements;
+                cachedStops = data.elements.map(el => ({
+                    lat: el.lat ?? el.center?.lat,
+                    lon: el.lon ?? el.center?.lon,
+                    tags: el.tags,
+                })).filter(el => el.lat != null && el.lon != null);
                 return cachedStops;
             } catch (error) {
                 if (error.name === 'AbortError') {
@@ -215,6 +242,7 @@
             url.searchParams.set('lat', lat.toFixed(4));
             url.searchParams.set('long', lng.toFixed(4));
             url.searchParams.set('z', z);
+            url.searchParams.set('mode', currentMode);
 
             history.replaceState(history.state, 'unused', url.href);
         }
