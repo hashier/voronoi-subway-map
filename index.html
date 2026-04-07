@@ -69,12 +69,18 @@
         canvas.height = height;
 
         // Code
+        let debounceTimeout = null;
+        function debouncedMoveEnd() {
+            clearTimeout(debounceTimeout);
+            debounceTimeout = setTimeout(moveEnd, 500);
+        }
+
         function resizeCanvas() {
             width = window.innerWidth;
             height = window.innerHeight;
             canvas.width = width;
             canvas.height = height;
-            moveEnd();
+            debouncedMoveEnd();
         }
         window.addEventListener('resize', resizeCanvas);
 
@@ -214,7 +220,7 @@
             updateURL();
             drawVoronoi();
         }
-        map.on('moveend', moveEnd);
+        map.on('moveend', debouncedMoveEnd);
 
         drawVoronoi();
     </script>
