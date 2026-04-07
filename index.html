@@ -54,6 +54,27 @@
             to { transform: translate(-50%, -50%) rotate(360deg); }
         }
 
+        #error-banner {
+            display: none;
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1002;
+            background: #d32f2f;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            font: 13px/1.5 sans-serif;
+            max-width: 80%;
+            text-align: center;
+        }
+
+        #error-banner.visible {
+            display: block;
+        }
+
         #controls {
             position: absolute;
             top: 10px;
@@ -78,6 +99,7 @@
     <canvas id="canvas"></canvas>
     <div id="spinner"></div>
     <div id="controls"></div>
+    <div id="error-banner"></div>
     <script type="module">
 
         import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
@@ -177,6 +199,15 @@
         let cachedBounds = null;
         let cachedStops = null;
         let abortController = null;
+        const errorBanner = document.getElementById('error-banner');
+        let errorTimeout = null;
+
+        function showError(msg) {
+            clearTimeout(errorTimeout);
+            errorBanner.textContent = msg;
+            errorBanner.classList.add('visible');
+            errorTimeout = setTimeout(() => errorBanner.classList.remove('visible'), 8000);
+        }
 
         function expandBounds(bounds, factor) {
             const latPad = (bounds.getNorth() - bounds.getSouth()) * (factor - 1) / 2;
@@ -211,8 +242,18 @@
             try {
                 console.log("Fetching subway stops…");
                 const response = await fetch(url, { signal: abortController.signal });
+                if (!response.ok) {
+                    const msg = response.status === 429
+                        ? `Overpass API rate limit hit (429). Try again in a few seconds.`
+                        : response.status === 504
+                        ? `Overpass API timeout (504). The query may be too broad — try a smaller area or simpler mode.`
+                        : `Overpass API error: ${response.status} ${response.statusText}`;
+                    console.error(msg);
+                    showError(msg);
+                    return [];
+                }
                 const data = await response.json();
-                console.log("Fetching done");
+                console.log(`Fetching done — ${data.elements.length} elements`);
                 cachedBounds = fetchBounds;
                 cachedStops = data.elements.map(el => ({
                     lat: el.lat ?? el.center?.lat,
@@ -226,6 +267,7 @@
                     return [];
                 }
                 console.error('Error fetching subway stops:', error);
+                showError(`Network error: ${error.message}`);
                 return [];
             }
         }
