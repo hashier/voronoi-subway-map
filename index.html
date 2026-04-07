@@ -275,7 +275,7 @@
                         return null;
                     }
                     if (attempt < maxRetries) {
-                        const delay = 1000 * Math.pow(2, attempt - 1);
+                        const delay = [3000, 5000, 10000][attempt - 1];
                         console.warn(`Network error: ${error.message} — retrying in ${delay}ms…`);
                         await new Promise(r => setTimeout(r, delay));
                         continue;
