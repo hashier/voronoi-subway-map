@@ -151,8 +151,6 @@
             radio.checked = key === currentMode;
             radio.addEventListener('change', () => {
                 currentMode = key;
-                cachedBounds = null;
-                cachedStops = null;
                 debouncedMoveEnd();
             });
             label.appendChild(radio);
@@ -196,8 +194,7 @@
         }
         window.addEventListener('resize', resizeCanvas);
 
-        let cachedBounds = null;
-        let cachedStops = null;
+        const cache = {};
         let abortController = null;
         const errorBanner = document.getElementById('error-banner');
         let errorTimeout = null;
@@ -222,12 +219,13 @@
         async function fetchSubwayStops() {
             const bounds = map.getBounds();
 
+            const modeCache = cache[currentMode];
             console.log("Current bounds:", bounds.toBBoxString());
-            console.log("Cached bounds:", cachedBounds ? cachedBounds.toBBoxString() : "none");
+            console.log("Cached bounds:", modeCache ? modeCache.bounds.toBBoxString() : "none");
 
-            if (cachedBounds && cachedBounds.contains(bounds)) {
+            if (modeCache && modeCache.bounds.contains(bounds)) {
                 console.log("Using cached stops");
-                return cachedStops;
+                return modeCache.stops;
             }
 
             const fetchBounds = expandBounds(bounds, 1.5);
@@ -255,13 +253,13 @@
                 }
                 const data = await response.json();
                 console.log(`Fetching done — ${data.elements.length} elements`);
-                cachedBounds = fetchBounds;
-                cachedStops = data.elements.map(el => ({
+                const stops = data.elements.map(el => ({
                     lat: el.lat ?? el.center?.lat,
                     lon: el.lon ?? el.center?.lon,
                     tags: el.tags,
                 })).filter(el => el.lat != null && el.lon != null);
-                return cachedStops;
+                cache[currentMode] = { bounds: fetchBounds, stops };
+                return stops;
             } catch (error) {
                 if (error.name === 'AbortError') {
                     console.log("Fetch aborted");
