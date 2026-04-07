@@ -84,11 +84,34 @@
         }
         window.addEventListener('resize', resizeCanvas);
 
+        let cachedBounds = null;
+        let cachedStops = null;
+
+        function expandBounds(bounds, factor) {
+            const latPad = (bounds.getNorth() - bounds.getSouth()) * (factor - 1) / 2;
+            const lngPad = (bounds.getEast() - bounds.getWest()) * (factor - 1) / 2;
+            return L.latLngBounds(
+                [bounds.getSouth() - latPad, bounds.getWest() - lngPad],
+                [bounds.getNorth() + latPad, bounds.getEast() + lngPad]
+            );
+        }
+
         async function fetchSubwayStops() {
             const bounds = map.getBounds();
+
+            console.log("Current bounds:", bounds.toBBoxString());
+            console.log("Cached bounds:", cachedBounds ? cachedBounds.toBBoxString() : "none");
+
+            if (cachedBounds && cachedBounds.contains(bounds)) {
+                console.log("Using cached stops");
+                return cachedStops;
+            }
+
+            const fetchBounds = expandBounds(bounds, 1.5);
+            console.log("Fetching with expanded bounds:", fetchBounds.toBBoxString());
             const query = `
                 [out:json];
-                node["station"="subway"](${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()});
+                node["station"="subway"](${fetchBounds.getSouth()},${fetchBounds.getWest()},${fetchBounds.getNorth()},${fetchBounds.getEast()});
                 out body;
             `;
             const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
@@ -96,8 +119,10 @@
                 console.log("Fetching subway stops…");
                 const response = await fetch(url);
                 const data = await response.json();
-                console.log("Fetching done")
-                return data.elements;
+                console.log("Fetching done");
+                cachedBounds = fetchBounds;
+                cachedStops = data.elements;
+                return cachedStops;
             } catch (error) {
                 console.error('Error fetching subway stops:', error);
                 return [];
