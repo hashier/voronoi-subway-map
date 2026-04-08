@@ -450,17 +450,16 @@
         const statsEl = document.getElementById('stats');
 
         function showStats(timings, stationCount) {
-            const speedup = timings.pixelsOld / timings.pixelsNew;
             const lines = [
-                `stations:   ${stationCount.toLocaleString()}  canvas: ${width}×${height}`,
-                `fetch:      ${timings.fetch.toFixed(0)}ms`,
-                `project:    ${timings.project.toFixed(0)}ms`,
-                `delaunay:   ${timings.delaunay.toFixed(0)}ms`,
-                `colors:     ${timings.colorAssign.toFixed(0)}ms`,
-                `pixels old: ${timings.pixelsOld.toFixed(0)}ms  (d3.color in loop)`,
-                `pixels new: ${timings.pixelsNew.toFixed(0)}ms  (pre-parsed, ${speedup.toFixed(1)}x)`,
-                `markers:    ${timings.markers.toFixed(0)}ms`,
-                `total:      ${timings.total.toFixed(0)}ms`,
+                `stations: ${stationCount.toLocaleString()}  canvas: ${width}×${height}`,
+                `fetch:    ${timings.fetch.toFixed(0)}ms`,
+                `project:  ${timings.project.toFixed(0)}ms`,
+                `delaunay: ${timings.delaunay.toFixed(0)}ms`,
+                `colors:   ${timings.colorAssign.toFixed(0)}ms`,
+                `voronoi:  ${timings.voronoi.toFixed(0)}ms`,
+                `fill:     ${timings.fill.toFixed(0)}ms`,
+                `markers:  ${timings.markers.toFixed(0)}ms`,
+                `total:    ${timings.total.toFixed(0)}ms`,
             ];
             statsEl.textContent = lines.join('\n');
         }
@@ -509,51 +508,26 @@
             const colors = assignColors(stops, delaunay);
             t.colorAssign = performance.now() - t.colorAssignStart;
 
-            const imageData = ctx.createImageData(width, height);
-            const data = imageData.data;
+            t.voronoiStart = performance.now();
+            const voronoi = delaunay.voronoi([0, 0, width, height]);
+            t.voronoi = performance.now() - t.voronoiStart;
 
-            // Old approach: parse color strings in the hot loop
-            t.pixelsOldStart = performance.now();
-            for (let y = 0; y < height; y++) {
-                for (let x = 0; x < width; x++) {
-                    const index = (y * width + x) * 4;
-                    const stopIndex = delaunay.find(x, y);
-                    const color = d3.color(colors[stopIndex]);
-                    if (color) {
-                        const colorRgb = color.rgb();
-                        data[index] = colorRgb.r;
-                        data[index + 1] = colorRgb.g;
-                        data[index + 2] = colorRgb.b;
-                        data[index + 3] = 125;
-                    }
+            t.fillStart = performance.now();
+            ctx.globalAlpha = 125 / 255;
+            for (let i = 0; i < stops.length; i++) {
+                const cell = voronoi.cellPolygon(i);
+                if (!cell) continue;
+                ctx.beginPath();
+                ctx.moveTo(cell[0][0], cell[0][1]);
+                for (let j = 1; j < cell.length; j++) {
+                    ctx.lineTo(cell[j][0], cell[j][1]);
                 }
+                ctx.closePath();
+                ctx.fillStyle = colors[i];
+                ctx.fill();
             }
-            t.pixelsOld = performance.now() - t.pixelsOldStart;
-
-            // New approach: pre-parse colors to RGB arrays, only lookup in hot loop
-            const colorRgbLookup = colors.map(c => {
-                const rgb = d3.color(c)?.rgb();
-                return rgb ? [rgb.r, rgb.g, rgb.b] : null;
-            });
-            data.fill(0);
-
-            t.pixelsNewStart = performance.now();
-            for (let y = 0; y < height; y++) {
-                for (let x = 0; x < width; x++) {
-                    const index = (y * width + x) * 4;
-                    const stopIndex = delaunay.find(x, y);
-                    const rgb = colorRgbLookup[stopIndex];
-                    if (rgb) {
-                        data[index] = rgb[0];
-                        data[index + 1] = rgb[1];
-                        data[index + 2] = rgb[2];
-                        data[index + 3] = 125;
-                    }
-                }
-            }
-            t.pixelsNew = performance.now() - t.pixelsNewStart;
-
-            ctx.putImageData(imageData, 0, 0);
+            ctx.globalAlpha = 1;
+            t.fill = performance.now() - t.fillStart;
 
             t.markersStart = performance.now();
             markerLayer.clearLayers();
