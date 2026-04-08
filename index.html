@@ -273,12 +273,36 @@
         bordersLabel.append(' Cell borders');
         controls.appendChild(bordersLabel);
 
+        const darkLabel = document.createElement('label');
+        const darkCheckbox = document.createElement('input');
+        darkCheckbox.type = 'checkbox';
+        darkCheckbox.checked = urlParams.get('dark') === '1';
+        darkCheckbox.addEventListener('change', () => {
+            darkMode = darkCheckbox.checked;
+            map.removeLayer(tileLayers[darkMode ? 'light' : 'dark']);
+            tileLayers[darkMode ? 'dark' : 'light'].addTo(map);
+            document.querySelector('#github-link svg').setAttribute('fill', darkMode ? '#ccc' : '#333');
+            updateURL();
+        });
+        darkLabel.appendChild(darkCheckbox);
+        darkLabel.append(' Dark mode');
+        controls.appendChild(darkLabel);
+
         // Map
         const map = L.map('map').setView([lat, lng], z);
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 18,
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        }).addTo(map);
+        const tileLayers = {
+            light: L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 18,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }),
+            dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
+            }),
+        };
+        let darkMode = urlParams.get('dark') === '1';
+        tileLayers[darkMode ? 'dark' : 'light'].addTo(map);
+        if (darkMode) document.querySelector('#github-link svg').setAttribute('fill', '#ccc');
         let markerLayer = L.layerGroup().addTo(map);
         function resetMarkers() {
             map.removeLayer(markerLayer);
@@ -487,6 +511,8 @@
             url.searchParams.set('long', lng.toFixed(4));
             url.searchParams.set('z', z);
             url.searchParams.set('mode', currentMode);
+            if (darkMode) url.searchParams.set('dark', '1');
+            else url.searchParams.delete('dark');
 
             history.replaceState(history.state, 'unused', url.href);
         }
