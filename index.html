@@ -260,7 +260,8 @@
         function debouncedMoveEnd() {
             clearTimeout(debounceTimeout);
             debounceStart = performance.now();
-            debounceTimeout = setTimeout(moveEnd, 500);
+            const delay = QUERY_MODES[currentMode].static ? 100 : 500;
+            debounceTimeout = setTimeout(moveEnd, delay);
         }
 
         function resizeCanvas() {
