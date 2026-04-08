@@ -489,15 +489,10 @@
             statsEl.textContent = lines.join('\n');
         }
 
-        // Yield to browser so it can repaint the stats between phases
-        const yieldFrame = () => new Promise(r => requestAnimationFrame(r));
-
-        async function timePhase(name, fn) {
+        function timePhase(name, fn) {
             const start = performance.now();
             const result = fn();
-            const ms = performance.now() - start;
-            updateStats(name, ms);
-            await yieldFrame();
+            updateStats(name, performance.now() - start);
             return result;
         }
 
@@ -530,30 +525,28 @@
                 showBanner('No stations found in this area. Try zooming out or switching query mode.', { color: '#555' });
                 return;
             }
-            await yieldFrame();
-
-            const stops = await timePhase('project', () =>
+            const stops = timePhase('project', () =>
                 rawStops.map((stop) => {
                     const point = map.latLngToContainerPoint([stop.lat, stop.lon]);
                     return { x: point.x, y: point.y };
                 })
             );
 
-            const delaunay = await timePhase('delaunay', () =>
+            const delaunay = timePhase('delaunay', () =>
                 new Delaunay(stops.map(s => [s.x, s.y]).flat(Infinity))
             );
             currentDelaunay = delaunay;
             currentRawStops = rawStops;
 
-            const colors = await timePhase('colors', () =>
+            const colors = timePhase('colors', () =>
                 assignColors(stops, delaunay)
             );
 
-            const voronoi = await timePhase('voronoi', () =>
+            const voronoi = timePhase('voronoi', () =>
                 delaunay.voronoi([0, 0, width, height])
             );
 
-            await timePhase('fill', () => {
+            timePhase('fill', () => {
                 ctx.globalAlpha = 125 / 255;
                 for (let i = 0; i < stops.length; i++) {
                     const cell = voronoi.cellPolygon(i);
@@ -570,7 +563,7 @@
                 ctx.globalAlpha = 1;
             });
 
-            await timePhase('markers', () => {
+            timePhase('markers', () => {
                 markerLayer.clearLayers();
                 for (let i = 0; i < rawStops.length; i++) {
                     const stop = rawStops[i];
