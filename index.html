@@ -106,6 +106,27 @@
             pointer-events: none;
         }
 
+        #stats-toggle {
+            display: none;
+            position: absolute;
+            bottom: 30px;
+            right: 10px;
+            z-index: 1002;
+            background: rgba(0, 0, 0, 0.6);
+            color: #ccc;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font: 11px/1.3 monospace;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            #stats { display: none; }
+            #stats-toggle { display: block; }
+            #stats.visible { display: block; bottom: 50px; }
+        }
+
         #station-label {
             display: none;
             position: absolute;
@@ -129,6 +150,7 @@
     <div id="error-banner"></div>
     <div id="station-label"></div>
     <div id="stats"></div>
+    <button id="stats-toggle">stats</button>
     <script type="module">
 
         import { Delaunay } from "https://cdn.jsdelivr.net/npm/d3-delaunay@6/+esm";
@@ -445,38 +467,59 @@
         });
 
         const statsEl = document.getElementById('stats');
+        const statsToggle = document.getElementById('stats-toggle');
+        statsToggle.addEventListener('click', () => statsEl.classList.toggle('visible'));
 
-        function showStats(timings, stationCount) {
+        const stats = {};
+        let stationCount = 0;
+        function updateStats(phase, ms) {
+            stats[phase] = ms;
+            const fmt = (k) => stats[k] != null ? `${stats[k].toFixed(0)}ms` : '…';
             const lines = [
                 `stations: ${stationCount.toLocaleString()}  canvas: ${width}×${height}`,
-                `fetch:    ${timings.fetch.toFixed(0)}ms`,
-                `project:  ${timings.project.toFixed(0)}ms`,
-                `delaunay: ${timings.delaunay.toFixed(0)}ms`,
-                `colors:   ${timings.colorAssign.toFixed(0)}ms`,
-                `voronoi:  ${timings.voronoi.toFixed(0)}ms`,
-                `fill:     ${timings.fill.toFixed(0)}ms`,
-                `markers:  ${timings.markers.toFixed(0)}ms`,
-                `total:    ${timings.total.toFixed(0)}ms`,
+                `fetch:    ${fmt('fetch')}`,
+                `project:  ${fmt('project')}`,
+                `delaunay: ${fmt('delaunay')}`,
+                `colors:   ${fmt('colors')}`,
+                `voronoi:  ${fmt('voronoi')}`,
+                `fill:     ${fmt('fill')}`,
+                `markers:  ${fmt('markers')}`,
+                `total:    ${fmt('total')}`,
             ];
             statsEl.textContent = lines.join('\n');
+        }
+
+        // Yield to browser so it can repaint the stats between phases
+        const yieldFrame = () => new Promise(r => requestAnimationFrame(r));
+
+        async function timePhase(name, fn) {
+            const start = performance.now();
+            const result = fn();
+            const ms = performance.now() - start;
+            updateStats(name, ms);
+            await yieldFrame();
+            return result;
         }
 
         async function drawVoronoi() {
             if (skipVoronoi) {
                 return;
             }
-            const t = {};
-            t.totalStart = performance.now();
+            const totalStart = performance.now();
 
             canvas.style.transform = '';
             ctx.clearRect(0, 0, width, height);
             currentDelaunay = null;
             currentRawStops = null;
+            for (const k of Object.keys(stats)) delete stats[k];
+            stationCount = 0;
+            updateStats('fetch', null);
 
             spinner.classList.add('visible');
-            t.fetchStart = performance.now();
+            const fetchStart = performance.now();
             const rawStops = await fetchSubwayStops();
-            t.fetch = performance.now() - t.fetchStart;
+            stationCount = rawStops?.length || 0;
+            updateStats('fetch', performance.now() - fetchStart);
             spinner.classList.remove('visible');
             if (rawStops === null) {
                 markerLayer.clearLayers();
@@ -487,65 +530,65 @@
                 showBanner('No stations found in this area. Try zooming out or switching query mode.', { color: '#555' });
                 return;
             }
+            await yieldFrame();
 
-            t.projectStart = performance.now();
-            const stops = rawStops.map((stop, index) => {
-                const point = map.latLngToContainerPoint([stop.lat, stop.lon]);
-                return { x: point.x, y: point.y };
-            });
-            t.project = performance.now() - t.projectStart;
+            const stops = await timePhase('project', () =>
+                rawStops.map((stop) => {
+                    const point = map.latLngToContainerPoint([stop.lat, stop.lon]);
+                    return { x: point.x, y: point.y };
+                })
+            );
 
-            t.delaunayStart = performance.now();
-            const delaunay = new Delaunay(stops.map(s => [s.x, s.y]).flat(Infinity));
-            t.delaunay = performance.now() - t.delaunayStart;
+            const delaunay = await timePhase('delaunay', () =>
+                new Delaunay(stops.map(s => [s.x, s.y]).flat(Infinity))
+            );
             currentDelaunay = delaunay;
             currentRawStops = rawStops;
 
-            t.colorAssignStart = performance.now();
-            const colors = assignColors(stops, delaunay);
-            t.colorAssign = performance.now() - t.colorAssignStart;
+            const colors = await timePhase('colors', () =>
+                assignColors(stops, delaunay)
+            );
 
-            t.voronoiStart = performance.now();
-            const voronoi = delaunay.voronoi([0, 0, width, height]);
-            t.voronoi = performance.now() - t.voronoiStart;
+            const voronoi = await timePhase('voronoi', () =>
+                delaunay.voronoi([0, 0, width, height])
+            );
 
-            t.fillStart = performance.now();
-            ctx.globalAlpha = 125 / 255;
-            for (let i = 0; i < stops.length; i++) {
-                const cell = voronoi.cellPolygon(i);
-                if (!cell) continue;
-                ctx.beginPath();
-                ctx.moveTo(cell[0][0], cell[0][1]);
-                for (let j = 1; j < cell.length; j++) {
-                    ctx.lineTo(cell[j][0], cell[j][1]);
+            await timePhase('fill', () => {
+                ctx.globalAlpha = 125 / 255;
+                for (let i = 0; i < stops.length; i++) {
+                    const cell = voronoi.cellPolygon(i);
+                    if (!cell) continue;
+                    ctx.beginPath();
+                    ctx.moveTo(cell[0][0], cell[0][1]);
+                    for (let j = 1; j < cell.length; j++) {
+                        ctx.lineTo(cell[j][0], cell[j][1]);
+                    }
+                    ctx.closePath();
+                    ctx.fillStyle = colors[i];
+                    ctx.fill();
                 }
-                ctx.closePath();
-                ctx.fillStyle = colors[i];
-                ctx.fill();
-            }
-            ctx.globalAlpha = 1;
-            t.fill = performance.now() - t.fillStart;
+                ctx.globalAlpha = 1;
+            });
 
-            t.markersStart = performance.now();
-            markerLayer.clearLayers();
-            for (let i = 0; i < rawStops.length; i++) {
-                const stop = rawStops[i];
-                L.circleMarker([stop.lat, stop.lon], {
-                    radius: 6,
-                    fillColor: colors[i],
-                    color: 'white',
-                    weight: 1,
-                    fillOpacity: 1,
-                }).bindTooltip(stop.name || stop.tags?.name || 'Unknown station')
-                  .addTo(markerLayer);
-            }
-            t.markers = performance.now() - t.markersStart;
+            await timePhase('markers', () => {
+                markerLayer.clearLayers();
+                for (let i = 0; i < rawStops.length; i++) {
+                    const stop = rawStops[i];
+                    L.circleMarker([stop.lat, stop.lon], {
+                        radius: 6,
+                        fillColor: colors[i],
+                        color: 'white',
+                        weight: 1,
+                        fillOpacity: 1,
+                    }).bindTooltip(stop.name || stop.tags?.name || 'Unknown station')
+                      .addTo(markerLayer);
+                }
+            });
 
             canvasRefLatLng = map.getCenter();
             canvasRefPoint = map.latLngToContainerPoint(canvasRefLatLng);
 
-            t.total = performance.now() - t.totalStart;
-            showStats(t, rawStops.length);
+            updateStats('total', performance.now() - totalStart);
         }
 
         // Map moved
