@@ -10,6 +10,8 @@
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-control-geocoder@3.3.1/dist/Control.Geocoder.css" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-control-geocoder@3.3.1/dist/Control.Geocoder.min.js"></script>
     <style>
         body,
         html {
@@ -164,6 +166,12 @@
             white-space: nowrap;
         }
 
+        .leaflet-top.leaflet-left {
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+        }
+
         #github-link {
             position: absolute;
             bottom: 6px;
@@ -306,13 +314,23 @@
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             }),
             dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                maxZoom: 19,
+                maxZoom: 18,
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
             }),
         };
         let darkMode = urlParams.get('dark') === '1';
         tileLayers[darkMode ? 'dark' : 'light'].addTo(map);
         if (darkMode) document.querySelector('#github-link svg').setAttribute('fill', '#ccc');
+        L.Control.geocoder({
+            defaultMarkGeocode: false,
+            position: 'topleft',
+            placeholder: 'Search city or address…',
+            collapsed: false,
+        })
+            .on('markgeocode', (e) => {
+                map.fitBounds(e.geocode.bbox);
+            })
+            .addTo(map);
         let markerLayer = L.layerGroup().addTo(map);
         function resetMarkers() {
             map.removeLayer(markerLayer);
