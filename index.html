@@ -221,7 +221,11 @@
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         }).addTo(map);
         map.attributionControl.addAttribution('<a href="https://github.com/hashier/voronoi-subway-map/">Source</a>');
-        const markerLayer = L.layerGroup().addTo(map);
+        let markerLayer = L.layerGroup().addTo(map);
+        function resetMarkers() {
+            map.removeLayer(markerLayer);
+            markerLayer = L.layerGroup().addTo(map);
+        }
 
         // Canvas
         const canvas = document.getElementById('canvas');
@@ -517,11 +521,11 @@
             updateStats('fetch', performance.now() - fetchStart);
             spinner.classList.remove('visible');
             if (rawStops === null) {
-                markerLayer.clearLayers();
+                resetMarkers();
                 return;
             }
             if (rawStops.length === 0) {
-                markerLayer.clearLayers();
+                resetMarkers();
                 showBanner('No stations found in this area. Try zooming out or switching query mode.', { color: '#555' });
                 return;
             }
@@ -564,7 +568,7 @@
             });
 
             timePhase('markers', () => {
-                markerLayer.clearLayers();
+                resetMarkers();
                 for (let i = 0; i < rawStops.length; i++) {
                     const stop = rawStops[i];
                     L.circleMarker([stop.lat, stop.lon], {
