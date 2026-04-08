@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Voronoi-style cells -->
+  <polygon points="0,0 16,2 12,14 0,12" fill="#1f77b4"/>
+  <polygon points="16,2 32,0 32,10 20,12 12,14" fill="#ff7f0e"/>
+  <polygon points="32,10 32,22 22,20 20,12" fill="#2ca02c"/>
+  <polygon points="0,12 12,14 10,26 0,32" fill="#d62728"/>
+  <polygon points="12,14 20,12 22,20 18,32 10,26" fill="#9467bd"/>
+  <polygon points="22,20 32,22 32,32 18,32" fill="#8c564b"/>
+  <polygon points="0,32 10,26 18,32 0,32" fill="#e377c2"/>
+  <!-- Station dots -->
+  <circle cx="6" cy="6" r="2" fill="white" stroke="#333" stroke-width="0.5"/>
+  <circle cx="22" cy="6" r="2" fill="white" stroke="#333" stroke-width="0.5"/>
+  <circle cx="28" cy="16" r="2" fill="white" stroke="#333" stroke-width="0.5"/>
+  <circle cx="6" cy="20" r="2" fill="white" stroke="#333" stroke-width="0.5"/>
+  <circle cx="16" cy="18" r="2" fill="white" stroke="#333" stroke-width="0.5"/>
+  <circle cx="26" cy="28" r="2" fill="white" stroke="#333" stroke-width="0.5"/>
+</svg>
