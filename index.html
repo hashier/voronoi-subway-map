@@ -198,6 +198,11 @@
                 static: true,
                 dataUrl: 'data/all-rail.json',
             },
+            'airports': {
+                label: 'Airports',
+                static: true,
+                dataUrl: 'data/airports.json',
+            },
             'buses': {
                 label: 'Buses',
                 buildQuery: (b) => `[out:json];(nwr["highway"="bus_stop"](${bbox(b)});nwr["amenity"="bus_station"](${bbox(b)}););out body center;`,

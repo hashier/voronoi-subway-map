@@ -19,7 +19,8 @@ set -l modes \
     'subway-nodes' 'node["station"="subway"];out body;' \
     'subway-all' 'nwr["station"="subway"];out body center;' \
     'subway-broad' '(nwr["station"="subway"];nwr["railway"="station"]["subway"="yes"];);out body center;' \
-    'all-rail' '(nwr["station"="subway"];nwr["railway"="station"]["subway"="yes"];nwr["station"~"light_rail|monorail"];nwr["railway"~"tram_stop|halt"];);out body center;'
+    'all-rail' '(nwr["station"="subway"];nwr["railway"="station"]["subway"="yes"];nwr["station"~"light_rail|monorail"];nwr["railway"~"tram_stop|halt"];);out body center;' \
+    'airports' 'nwr["aeroway"="aerodrome"];out body center;'
 
 set -l has_failures false
 
