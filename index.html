@@ -478,11 +478,13 @@
 
         const stats = {};
         let stationCount = 0;
+        let visibleCount = 0;
         function updateStats(phase, ms) {
             stats[phase] = ms;
             const fmt = (k) => stats[k] != null ? `${stats[k].toFixed(0)}ms` : '…';
             const lines = [
-                `stations: ${stationCount.toLocaleString()}  canvas: ${width}×${height}`,
+                `visible:  ${visibleCount.toLocaleString()}/${stationCount.toLocaleString()}`,
+                `canvas:   ${width}×${height}`,
                 `fetch:    ${fmt('fetch')}`,
                 `project:  ${fmt('project')}`,
                 `delaunay: ${fmt('delaunay')}`,
@@ -542,6 +544,8 @@
                     return { x: point.x, y: point.y };
                 })
             );
+
+            visibleCount = stops.filter(s => s.x >= 0 && s.x <= width && s.y >= 0 && s.y <= height).length;
 
             const delaunay = timePhase('delaunay', () =>
                 new Delaunay(stops.map(s => [s.x, s.y]).flat(Infinity))
