@@ -236,8 +236,10 @@
 
         // Code
         let debounceTimeout = null;
+        let debounceStart = null;
         function debouncedMoveEnd() {
             clearTimeout(debounceTimeout);
+            debounceStart = performance.now();
             debounceTimeout = setTimeout(moveEnd, 500);
         }
 
@@ -488,7 +490,10 @@
                 `voronoi:  ${fmt('voronoi')}`,
                 `fill:     ${fmt('fill')}`,
                 `markers:  ${fmt('markers')}`,
+                `paint:    ${fmt('paint')}`,
                 `total:    ${fmt('total')}`,
+                `debounce: ${fmt('debounce')}`,
+                `perceived:${fmt('perceived')}`,
             ];
             statsEl.textContent = lines.join('\n');
         }
@@ -505,6 +510,7 @@
                 return;
             }
             const totalStart = performance.now();
+            const debounceMs = debounceStart ? totalStart - debounceStart : null;
 
             canvas.style.transform = '';
             ctx.clearRect(0, 0, width, height);
@@ -512,6 +518,7 @@
             currentRawStops = null;
             for (const k of Object.keys(stats)) delete stats[k];
             stationCount = 0;
+            if (debounceMs) updateStats('debounce', debounceMs);
             updateStats('fetch', null);
 
             spinner.classList.add('visible');
@@ -585,6 +592,12 @@
             canvasRefPoint = map.latLngToContainerPoint(canvasRefLatLng);
 
             updateStats('total', performance.now() - totalStart);
+
+            const paintStart = performance.now();
+            requestAnimationFrame(() => {
+                updateStats('paint', performance.now() - paintStart);
+                if (debounceMs) updateStats('perceived', performance.now() - debounceStart);
+            });
         }
 
         // Map moved
