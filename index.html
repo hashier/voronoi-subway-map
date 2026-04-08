@@ -258,6 +258,21 @@
             controls.appendChild(label);
         }
 
+        controls.appendChild(document.createElement('hr'));
+
+        let showBorders = true;
+        const bordersLabel = document.createElement('label');
+        const bordersCheckbox = document.createElement('input');
+        bordersCheckbox.type = 'checkbox';
+        bordersCheckbox.checked = showBorders;
+        bordersCheckbox.addEventListener('change', () => {
+            showBorders = bordersCheckbox.checked;
+            debouncedMoveEnd();
+        });
+        bordersLabel.appendChild(bordersCheckbox);
+        bordersLabel.append(' Cell borders');
+        controls.appendChild(bordersLabel);
+
         // Map
         const map = L.map('map').setView([lat, lng], z);
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -535,6 +550,7 @@
                 `colors:   ${fmt('colors')}`,
                 `voronoi:  ${fmt('voronoi')}`,
                 `fill:     ${fmt('fill')}`,
+                `borders:  ${fmt('borders')}`,
                 `markers:  ${fmt('markers')}`,
                 `paint:    ${fmt('paint')}`,
                 `total:    ${fmt('total')}`,
@@ -621,6 +637,18 @@
                 }
                 ctx.globalAlpha = 1;
             });
+
+            if (showBorders) {
+                timePhase('borders', () => {
+                    ctx.globalAlpha = 0.3;
+                    ctx.beginPath();
+                    voronoi.render(ctx);
+                    ctx.strokeStyle = '#000';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                    ctx.globalAlpha = 1;
+                });
+            }
 
             timePhase('markers', () => {
                 resetMarkers();
