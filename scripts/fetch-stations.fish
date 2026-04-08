@@ -21,6 +21,8 @@ set -l modes \
     'subway-broad' '(nwr["station"="subway"];nwr["railway"="station"]["subway"="yes"];);out body center;' \
     'all-rail' '(nwr["station"="subway"];nwr["railway"="station"]["subway"="yes"];nwr["station"~"light_rail|monorail"];nwr["railway"~"tram_stop|halt"];);out body center;'
 
+set -l has_failures false
+
 for i in (seq 1 2 (count $modes))
     set name $modes[$i]
     set query_body $modes[(math $i + 1)]
@@ -94,6 +96,7 @@ for i in (seq 1 2 (count $modes))
     # Merge all strip files into combined raw response
     if test (count $success_files) -eq 0
         echo "  ERROR: no strips downloaded for $name"
+        set has_failures true
         continue
     end
 
@@ -102,6 +105,7 @@ for i in (seq 1 2 (count $modes))
 
     if test $status -ne 0
         echo "  ERROR: merge failed for $name"
+        set has_failures true
         continue
     end
 
@@ -110,6 +114,7 @@ for i in (seq 1 2 (count $modes))
 
     if test $status -ne 0
         echo "  ERROR: normalize failed for $name"
+        set has_failures true
         continue
     end
 
@@ -119,9 +124,15 @@ for i in (seq 1 2 (count $modes))
 
     if test (count $failed_strips) -gt 0
         echo "  WARNING: Failed strips: $failed_strips"
+        set has_failures true
     end
 
     echo
 end
 
-echo "Done."
+if $has_failures
+    echo "Done with errors. Rerun to retry failed strips."
+    exit 1
+else
+    echo "Done."
+end
