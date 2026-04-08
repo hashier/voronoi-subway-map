@@ -91,6 +91,19 @@
             display: block;
             cursor: pointer;
         }
+
+        #station-label {
+            display: none;
+            position: absolute;
+            z-index: 1001;
+            pointer-events: none;
+            background: rgba(0, 0, 0, 0.75);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font: 12px/1.3 sans-serif;
+            white-space: nowrap;
+        }
     </style>
 </head>
 
@@ -100,6 +113,7 @@
     <div id="spinner"></div>
     <div id="controls"></div>
     <div id="error-banner"></div>
+    <div id="station-label"></div>
     <script type="module">
 
         import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
@@ -379,8 +393,37 @@
         }
 
         const spinner = document.getElementById('spinner');
+        const stationLabel = document.getElementById('station-label');
         let canvasRefLatLng = null;
         let canvasRefPoint = null;
+        let currentDelaunay = null;
+        let currentRawStops = null;
+
+        map.getContainer().addEventListener('mousemove', (e) => {
+            if (!currentDelaunay || !currentRawStops || !canvasRefLatLng) {
+                stationLabel.style.display = 'none';
+                return;
+            }
+            // Adjust mouse position for canvas pan offset
+            const pt = map.latLngToContainerPoint(canvasRefLatLng);
+            const dx = pt.x - canvasRefPoint.x;
+            const dy = pt.y - canvasRefPoint.y;
+            const index = currentDelaunay.find(e.clientX - dx, e.clientY - dy);
+            const stop = currentRawStops[index];
+            const name = stop?.name || stop?.tags?.name;
+            if (!name) {
+                stationLabel.style.display = 'none';
+                return;
+            }
+            stationLabel.textContent = name;
+            stationLabel.style.display = 'block';
+            stationLabel.style.left = (e.clientX + 12) + 'px';
+            stationLabel.style.top = (e.clientY - 8) + 'px';
+        });
+
+        map.getContainer().addEventListener('mouseleave', () => {
+            stationLabel.style.display = 'none';
+        });
 
         map.on('move', () => {
             if (canvasRefLatLng) {
@@ -396,6 +439,8 @@
             console.log("Drawing Voronoi…");
             canvas.style.transform = '';
             ctx.clearRect(0, 0, width, height);
+            currentDelaunay = null;
+            currentRawStops = null;
 
             spinner.classList.add('visible');
             const rawStops = await fetchSubwayStops();
@@ -416,6 +461,8 @@
             });
 
             const delaunay = new d3.Delaunay(stops.map(s => [s.x, s.y]).flat(Infinity));
+            currentDelaunay = delaunay;
+            currentRawStops = rawStops;
             const colors = assignColors(stops, delaunay);
 
             const imageData = ctx.createImageData(width, height);
