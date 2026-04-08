@@ -524,6 +524,18 @@
         let currentDelaunay = null;
         let currentRawStops = null;
 
+        function haversineMeters(lat1, lon1, lat2, lon2) {
+            const R = 6371000;
+            const toRad = (d) => d * Math.PI / 180;
+            const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
+            const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
+
+        function formatDistance(m) {
+            return m < 1000 ? `${Math.round(m)}m` : `${(m / 1000).toFixed(1)}km`;
+        }
+
         map.getContainer().addEventListener('mousemove', (e) => {
             if (!currentDelaunay || !currentRawStops || !canvasRefLatLng) {
                 stationLabel.style.display = 'none';
@@ -540,7 +552,9 @@
                 stationLabel.style.display = 'none';
                 return;
             }
-            stationLabel.textContent = name;
+            const cursorLatLng = map.containerPointToLatLng([e.clientX, e.clientY]);
+            const dist = haversineMeters(cursorLatLng.lat, cursorLatLng.lng, stop.lat, stop.lon);
+            stationLabel.textContent = `${name} — ${formatDistance(dist)}`;
             stationLabel.style.display = 'block';
             stationLabel.style.left = (e.clientX + 12) + 'px';
             stationLabel.style.top = (e.clientY - 8) + 'px';
