@@ -12,7 +12,7 @@ mkdir -p $data_dir $raw_dir
 set -l strip_width 10
 set -l max_retries 3
 set -l retry_delay 3
-set -l strip_delay 2
+set -l strip_delay 10
 
 # Mode definitions: name followed by query body (bbox injected per strip)
 set -l modes \
