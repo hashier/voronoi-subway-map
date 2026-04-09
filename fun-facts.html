@@ -122,46 +122,48 @@
 <body>
     <main>
         <h1>Fun Facts <a href="index.html">&larr; back to map</a></h1>
-        <p class="subtitle">Extracted from 20,232 subway stations and 46,064 airports in our dataset.</p>
+        <p class="subtitle">Extracted from 17,875 subway stations and 45,861 airports in our dataset (after deduplication).</p>
 
         <div class="stat-row">
             <div>
-                <div class="big-number">20,232</div>
+                <div class="big-number">17,875</div>
                 <div class="stat-label">Subway stations</div>
             </div>
             <div>
-                <div class="big-number">46,064</div>
+                <div class="big-number">45,861</div>
                 <div class="stat-label">Airports</div>
             </div>
             <div>
-                <div class="big-number">2.3:1</div>
+                <div class="big-number">2.6:1</div>
                 <div class="stat-label">Airport to subway ratio</div>
             </div>
         </div>
 
         <h2>China owns the subway world</h2>
-        <p>~10,000 stations (49% of all subway stations on earth) are in China.</p>
+        <p>~8,500 stations (48% of all subway stations on earth) are in China.</p>
         <table>
             <tr><th>City</th><th>Stations</th></tr>
-            <tr><td><a class="poi" href="index.html?lat=31.23&long=121.47&z=11">Shanghai</a></td><td>658</td></tr>
-            <tr><td><a class="poi" href="index.html?lat=40.75&long=-73.99&z=12">New York</a></td><td>511</td></tr>
-            <tr><td><a class="poi" href="index.html?lat=30.57&long=104.07&z=11">Chengdu</a></td><td>501</td></tr>
-            <tr><td><a class="poi" href="index.html?lat=39.91&long=116.40&z=11">Beijing</a></td><td>463</td></tr>
-            <tr><td><a class="poi" href="index.html?lat=48.86&long=2.35&z=12">Paris</a></td><td>407</td></tr>
-            <tr><td><a class="poi" href="index.html?lat=37.55&long=127.00&z=12">Seoul</a></td><td>349</td></tr>
-            <tr><td><a class="poi" href="index.html?lat=35.68&long=139.69&z=12">Tokyo</a></td><td>338</td></tr>
-            <tr><td><a class="poi" href="index.html?lat=55.75&long=37.62&z=12">Moscow</a></td><td>274</td></tr>
-            <tr><td><a class="poi" href="index.html?lat=51.51&long=-0.13&z=12">London</a></td><td>272</td></tr>
+            <tr><td><a class="poi" href="index.html?lat=31.23&long=121.47&z=11">Shanghai</a></td><td>816</td></tr>
+            <tr><td><a class="poi" href="index.html?lat=40.75&long=-73.99&z=12">New York</a></td><td>466</td></tr>
+            <tr><td><a class="poi" href="index.html?lat=39.91&long=116.40&z=11">Beijing</a></td><td>420</td></tr>
+            <tr><td><a class="poi" href="index.html?lat=37.55&long=127.00&z=12">Seoul</a></td><td>420</td></tr>
+            <tr><td><a class="poi" href="index.html?lat=30.57&long=104.07&z=11">Chengdu</a></td><td>380</td></tr>
+            <tr><td><a class="poi" href="index.html?lat=48.86&long=2.35&z=12">Paris</a></td><td>331</td></tr>
+            <tr><td><a class="poi" href="index.html?lat=35.68&long=139.69&z=12">Tokyo</a></td><td>276</td></tr>
+            <tr><td><a class="poi" href="index.html?lat=51.51&long=-0.13&z=12">London</a></td><td>270</td></tr>
+            <tr><td><a class="poi" href="index.html?lat=55.75&long=37.62&z=12">Moscow</a></td><td>243</td></tr>
         </table>
 
         <h2>Regional ratios</h2>
-        <p>The global 2.3:1 ratio hides extreme regional variation:</p>
+        <p>The global 2.6:1 ratio hides extreme regional variation:</p>
         <table>
-            <tr><th>Region</th><th>Airports per subway station</th></tr>
-            <tr><td>Australia / NZ</td><td>71:1</td></tr>
-            <tr><td>Africa</td><td>8.7:1</td></tr>
-            <tr><td>South America</td><td>8.0:1</td></tr>
-            <tr><td>Asia / Europe</td><td>0.7:1 — more subway stations than airports</td></tr>
+            <tr><th>Region</th><th>Subways</th><th>Airports</th><th>Airports per subway</th></tr>
+            <tr><td>Africa</td><td>5</td><td>3,310</td><td>662:1</td></tr>
+            <tr><td>Oceania</td><td>37</td><td>2,639</td><td>71:1</td></tr>
+            <tr><td>North America</td><td>1,498</td><td>18,517</td><td>12:1</td></tr>
+            <tr><td>South America</td><td>742</td><td>6,976</td><td>9.4:1</td></tr>
+            <tr><td>Europe</td><td>4,516</td><td>7,017</td><td>1.6:1</td></tr>
+            <tr><td>Asia</td><td>11,029</td><td>6,257</td><td>0.6:1 — more subways than airports</td></tr>
         </table>
 
         <h2>Geographic extremes</h2>
@@ -202,7 +204,7 @@
             <li><a class="poi" href="index.html?lat=35.17&long=136.91&z=16">&#26628;</a> — Nagoya, Japan. A single kanji character meaning "prosperity"</li>
             <li><a class="poi" href="index.html?lat=-23.55&long=-46.63&z=16">S&eacute;</a> — S&atilde;o Paulo. Shortest Latin-script station name (2 characters)</li>
             <li><a class="poi" href="index.html?lat=48.14&long=11.59&z=16">Lehel</a> — Munich. The only palindrome station name found</li>
-            <li>501 stations worldwide have no name at all</li>
+            <li>424 stations worldwide have no name at all</li>
         </ul>
 
         <h2>Most common names</h2>
@@ -236,7 +238,10 @@
         </table>
 
         <footer>
-            Data from <a href="https://www.openstreetmap.org/" style="color:#6ea8fe">OpenStreetMap</a> via Overpass API.
+            <p>Data from <a href="https://www.openstreetmap.org/" style="color:#6ea8fe">OpenStreetMap</a> via Overpass API.
+            Regional breakdowns use approximate bounding boxes, so per-continent numbers
+            are estimates (border regions like Turkey or Central America may be miscategorized).
+            Station and airport totals are exact — or at least as exact as OpenStreetMap gets.</p>
             <a href="index.html" style="color:#6ea8fe">&larr; Back to map</a>
         </footer>
     </main>
