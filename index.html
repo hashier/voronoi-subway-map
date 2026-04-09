@@ -171,6 +171,22 @@
             #stats.visible { display: block; bottom: 50px; }
         }
 
+        .dark-mode .leaflet-control-zoom a,
+        .dark-mode .leaflet-control-geocoder {
+            background: #333;
+            color: #ccc;
+            border-color: #555;
+        }
+
+        .dark-mode .leaflet-control-zoom a:hover {
+            background: #444;
+        }
+
+        .dark-mode .leaflet-control-geocoder input {
+            background: #333;
+            color: #ccc;
+        }
+
         #station-label {
             display: none;
             position: absolute;
@@ -315,6 +331,7 @@
             map.removeLayer(tileLayers[darkMode ? 'light' : 'dark']);
             tileLayers[darkMode ? 'dark' : 'light'].addTo(map);
             document.querySelector('#github-link svg').setAttribute('fill', darkMode ? '#ccc' : '#333');
+            document.body.classList.toggle('dark-mode', darkMode);
             updateURL();
         });
         darkLabel.appendChild(darkCheckbox);
@@ -370,7 +387,10 @@
         };
         let darkMode = urlParams.get('dark') === '1';
         tileLayers[darkMode ? 'dark' : 'light'].addTo(map);
-        if (darkMode) document.querySelector('#github-link svg').setAttribute('fill', '#ccc');
+        if (darkMode) {
+            document.querySelector('#github-link svg').setAttribute('fill', '#ccc');
+            document.body.classList.add('dark-mode');
+        }
         L.Control.geocoder({
             defaultMarkGeocode: false,
             position: 'topleft',
