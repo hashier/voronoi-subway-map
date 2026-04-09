@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fun Facts — Voronoi Subway Map</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <style>
+        body {
+            margin: 0;
+            padding: 40px 20px;
+            background: #1a1a2e;
+            color: #ccc;
+            font: 16px/1.7 -apple-system, sans-serif;
+        }
+
+        main {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            font-size: 28px;
+            margin-bottom: 4px;
+        }
+
+        h1 a {
+            color: #6ea8fe;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: normal;
+        }
+
+        h1 a:hover {
+            text-decoration: underline;
+        }
+
+        .subtitle {
+            color: #888;
+            margin-bottom: 32px;
+        }
+
+        h2 {
+            color: #e0e0e0;
+            font-size: 20px;
+            margin-top: 36px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 6px;
+        }
+
+        a.poi {
+            color: #6ea8fe;
+            text-decoration: none;
+        }
+
+        a.poi:hover {
+            text-decoration: underline;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 12px 0;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 4px 12px 4px 0;
+        }
+
+        th {
+            color: #aaa;
+            font-weight: normal;
+            border-bottom: 1px solid #333;
+        }
+
+        td {
+            border-bottom: 1px solid #222;
+        }
+
+        .big-number {
+            font-size: 32px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .stat-row {
+            display: flex;
+            gap: 40px;
+            margin: 16px 0;
+        }
+
+        .stat-row div {
+            flex: 1;
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 13px;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 4px;
+        }
+
+        footer {
+            margin-top: 48px;
+            padding-top: 16px;
+            border-top: 1px solid #333;
+            color: #666;
+            font-size: 13px;
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <h1>Fun Facts <a href="index.html">&larr; back to map</a></h1>
+        <p class="subtitle">Extracted from 20,232 subway stations and 46,064 airports in our dataset.</p>
+
+        <div class="stat-row">
+            <div>
+                <div class="big-number">20,232</div>
+                <div class="stat-label">Subway stations</div>
+            </div>
+            <div>
+                <div class="big-number">46,064</div>
+                <div class="stat-label">Airports</div>
+            </div>
+            <div>
+                <div class="big-number">2.3:1</div>
+                <div class="stat-label">Airport to subway ratio</div>
+            </div>
+        </div>
+
+        <h2>China owns the subway world</h2>
+        <p>~10,000 stations (49% of all subway stations on earth) are in China.</p>
+        <table>
+            <tr><th>City</th><th>Stations</th></tr>
+            <tr><td><a class="poi" href="index.html?lat=31.23&long=121.47&z=11">Shanghai</a></td><td>658</td></tr>
+            <tr><td><a class="poi" href="index.html?lat=40.75&long=-73.99&z=12">New York</a></td><td>511</td></tr>
+            <tr><td><a class="poi" href="index.html?lat=30.57&long=104.07&z=11">Chengdu</a></td><td>501</td></tr>
+            <tr><td><a class="poi" href="index.html?lat=39.91&long=116.40&z=11">Beijing</a></td><td>463</td></tr>
+            <tr><td><a class="poi" href="index.html?lat=48.86&long=2.35&z=12">Paris</a></td><td>407</td></tr>
+            <tr><td><a class="poi" href="index.html?lat=37.55&long=127.00&z=12">Seoul</a></td><td>349</td></tr>
+            <tr><td><a class="poi" href="index.html?lat=35.68&long=139.69&z=12">Tokyo</a></td><td>338</td></tr>
+            <tr><td><a class="poi" href="index.html?lat=55.75&long=37.62&z=12">Moscow</a></td><td>274</td></tr>
+            <tr><td><a class="poi" href="index.html?lat=51.51&long=-0.13&z=12">London</a></td><td>272</td></tr>
+        </table>
+
+        <h2>Regional ratios</h2>
+        <p>The global 2.3:1 ratio hides extreme regional variation:</p>
+        <table>
+            <tr><th>Region</th><th>Airports per subway station</th></tr>
+            <tr><td>Australia / NZ</td><td>71:1</td></tr>
+            <tr><td>Africa</td><td>8.7:1</td></tr>
+            <tr><td>South America</td><td>8.0:1</td></tr>
+            <tr><td>Asia / Europe</td><td>0.7:1 — more subway stations than airports</td></tr>
+        </table>
+
+        <h2>Geographic extremes</h2>
+        <h3 style="color:#bbb;font-size:16px;margin-bottom:8px">Subway stations</h3>
+        <table>
+            <tr><th>Direction</th><th>Station</th></tr>
+            <tr><td>Northernmost</td><td><a class="poi" href="index.html?lat=60.2392&long=25.1112&z=14">Mellunm&auml;ki</a> — Helsinki, Finland (60.24&deg;N)</td></tr>
+            <tr><td>Southernmost</td><td><a class="poi" href="index.html?lat=-37.8424&long=144.8838&z=14">Newport</a> — Melbourne, Australia (37.84&deg;S)</td></tr>
+        </table>
+
+        <h3 style="color:#bbb;font-size:16px;margin-bottom:8px">Airports</h3>
+        <table>
+            <tr><th>Direction</th><th>Airport</th></tr>
+            <tr><td>Northernmost</td><td><a class="poi" href="index.html?lat=83.09&long=-74.16&z=6&mode=airports">Ward Hunt Island</a> — Canadian Arctic (83.09&deg;N)</td></tr>
+            <tr><td>Southernmost</td><td><a class="poi" href="index.html?lat=-89.99&long=-16.81&z=4&mode=airports">Jack F. Paulus Skiway</a> — practically on the South Pole (89.99&deg;S)</td></tr>
+            <tr><td>Easternmost</td><td><a class="poi" href="index.html?lat=-16.53&long=179.98&z=12&mode=airports">Rabi Island</a> — Fiji (179.98&deg;E)</td></tr>
+            <tr><td>Westernmost</td><td><a class="poi" href="index.html?lat=-16.69&long=-179.88&z=12&mode=airports">Matei Airport</a> — Fiji (179.88&deg;W)</td></tr>
+        </table>
+        <p>The easternmost and westernmost airports are both in Fiji, ~4 km apart on either side of the 180th meridian.</p>
+
+        <h2>Best airport names</h2>
+        <ul>
+            <li><a class="poi" href="index.html?lat=37.94&long=41.12&z=14&mode=airports">Batman Airport</a> — Batman, Turkey</li>
+            <li><a class="poi" href="index.html?lat=64.07&long=-141.95&z=10&mode=airports">Chicken Airport</a> — Alaska (town population: ~7)</li>
+            <li><a class="poi" href="index.html?lat=-26.16&long=113.39&z=10&mode=airports">Useless Loop Airstrip</a> — Western Australia</li>
+            <li><a class="poi" href="index.html?lat=34.76&long=-76.65&z=12&mode=airports">Dead Cow Field</a> — North Carolina</li>
+            <li><a class="poi" href="index.html?lat=35.73&long=-79.31&z=12&mode=airports">Dead Dog Airport</a> — North Carolina</li>
+            <li><a class="poi" href="index.html?lat=41.05&long=-81.94&z=12&mode=airports">Crazy Bob's Airport</a> — Ohio</li>
+            <li><a class="poi" href="index.html?lat=40.14&long=-123.40&z=12&mode=airports">Hell'er High Water Airport</a> — California</li>
+            <li><a class="poi" href="index.html?lat=70.20&long=-148.46&z=10&mode=airports">Deadhorse Airport</a> — Prudhoe Bay, Alaska</li>
+        </ul>
+
+        <h2>Subway station quirks</h2>
+        <ul>
+            <li><a class="poi" href="index.html?lat=48.88&long=2.37&z=16">Stalingrad</a> — Paris still has 2 metro stations named for the battle</li>
+            <li><a class="poi" href="index.html?lat=35.17&long=136.91&z=16">&#26628;</a> — Nagoya, Japan. A single kanji character meaning "prosperity"</li>
+            <li><a class="poi" href="index.html?lat=-23.55&long=-46.63&z=16">S&eacute;</a> — S&atilde;o Paulo. Shortest Latin-script station name (2 characters)</li>
+            <li><a class="poi" href="index.html?lat=48.14&long=11.59&z=16">Lehel</a> — Munich. The only palindrome station name found</li>
+            <li>501 stations worldwide have no name at all</li>
+        </ul>
+
+        <h2>Most common names</h2>
+        <table>
+            <tr><th>Subway stations</th><th>Airports</th></tr>
+            <tr><td>Olympic Center (17 stations)</td><td>"Pista" / runway (74 airports)</td></tr>
+            <tr><td>People's Square (14)</td><td>"Campo De Aterrizaje" / landing field (53)</td></tr>
+            <tr><td>Convention Center (13)</td><td>Johnson Airport (11)</td></tr>
+            <tr><td>Sports Center (13)</td><td>Hilltop Airport (9)</td></tr>
+            <tr><td>Central (9)</td><td>Miller Airport (9)</td></tr>
+        </table>
+
+        <footer>
+            Data from <a href="https://www.openstreetmap.org/" style="color:#6ea8fe">OpenStreetMap</a> via Overpass API.
+            <a href="index.html" style="color:#6ea8fe">&larr; Back to map</a>
+        </footer>
+    </main>
+</body>
+
+</html>
