@@ -15,6 +15,13 @@ set -l retry_delay 3
 set -l strip_delay 10
 
 # Mode definitions: name followed by query body (bbox injected per strip)
+# Names here match data file names and keys in index.html QUERY_MODES.
+# User-facing labels (in index.html):
+#   subway-nodes  → "Subways (strict)"   — exact station=subway nodes only
+#   subway-all    → "Subways"            — nodes, ways, relations
+#   subway-broad  → "Subways (broad)"    — includes alternate tagging
+#   all-rail      → "All rail"           — adds light rail, monorail, tram
+#   airports      → "Airports"           — aerodromes worldwide
 set -l modes \
     'subway-nodes' 'node["station"="subway"];out body;' \
     'subway-all' 'nwr["station"="subway"];out body center;' \
