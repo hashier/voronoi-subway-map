@@ -331,6 +331,31 @@
         });
         controls.appendChild(copyBtn);
 
+        const cities = [
+            ['Berlin', 52.52, 13.40, 12, 'U-Bahn and S-Bahn mix'],
+            ['London', 51.51, -0.13, 12, 'Classic radial Tube network'],
+            ['Mexico City', 19.43, -99.13, 12, 'Large metro in dense urban grid'],
+            ['Moscow', 55.75, 37.62, 12, 'Iconic ring layout'],
+            ['New York', 40.75, -73.99, 12, 'Grid meets subway chaos'],
+            ['Paris', 48.86, 2.35, 12, 'Dense central Métro'],
+            ['Seoul', 37.55, 127.00, 12, 'Massive modern network'],
+            ['Stockholm', 59.33, 18.07, 12, 'Tunnelbana across islands'],
+            ['Tokyo', 35.68, 139.69, 12, 'Densest subway network on earth'],
+        ];
+        const exploreSelect = document.createElement('select');
+        exploreSelect.style.cssText = 'width:100%;margin-top:6px;background:rgba(255,255,255,0.15);color:#ccc;border:1px solid #555;border-radius:3px;padding:3px;font:12px sans-serif';
+        exploreSelect.innerHTML = '<option value="">Explore…</option>' +
+            cities.map(([name, lat, lon, z, hint], i) =>
+                `<option value="${i}" title="${hint}">${name}</option>`
+            ).join('');
+        exploreSelect.addEventListener('change', () => {
+            if (exploreSelect.value === '') return;
+            const [, lat, lon, z] = cities[exploreSelect.value];
+            map.setView([lat, lon], z);
+            exploreSelect.value = '';
+        });
+        controls.appendChild(exploreSelect);
+
         // Map
         const map = L.map('map').setView([lat, lng], z);
         const tileLayers = {
