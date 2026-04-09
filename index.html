@@ -268,7 +268,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         let lat = urlParams.get('lat') || 59.92;
         let lng = urlParams.get('long') || 10.75;
-        let z = urlParams.get('z') || 14;
+        let z = urlParams.get('z') || 12;
         let currentMode = urlParams.get('mode') || 'subway-all';
         if (!QUERY_MODES[currentMode]) currentMode = 'subway-all';
 
