@@ -228,32 +228,32 @@
         const bbox = (b) => `${b.getSouth()},${b.getWest()},${b.getNorth()},${b.getEast()}`;
         const QUERY_MODES = {
             'subway-nodes': {
-                label: 'Subways (nodes)',
-                hint: 'Subway station nodes only — pre-loaded data',
+                label: 'Subways (strict)',
+                hint: 'Exact station=subway nodes only — fewest results, pre-loaded',
                 static: true,
                 dataUrl: 'data/subway-nodes.json',
             },
             'subway-all': {
-                label: 'Subways (all)',
-                hint: 'Subway stations including ways and relations — pre-loaded data',
+                label: 'Subways',
+                hint: 'Subway stations (nodes, ways, relations) — pre-loaded',
                 static: true,
                 dataUrl: 'data/subway-all.json',
             },
             'subway-broad': {
                 label: 'Subways (broad)',
-                hint: 'Broader subway match including railway=station — pre-loaded data',
+                hint: 'Includes alternate tagging (railway=station) — more results, pre-loaded',
                 static: true,
                 dataUrl: 'data/subway-broad.json',
             },
             'all-rail': {
                 label: 'All rail',
-                hint: 'Subways, light rail, monorail, tram stops — pre-loaded data',
+                hint: 'Subways, light rail, monorail, tram stops — pre-loaded',
                 static: true,
                 dataUrl: 'data/all-rail.json',
             },
             'airports': {
                 label: 'Airports',
-                hint: 'Aerodromes worldwide — pre-loaded data',
+                hint: 'Aerodromes worldwide — pre-loaded',
                 static: true,
                 dataUrl: 'data/airports.json',
             },
