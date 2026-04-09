@@ -215,6 +215,26 @@
             <tr><td>Central (9)</td><td>Miller Airport (9)</td></tr>
         </table>
 
+        <h2>Data cleanup</h2>
+        <p>OpenStreetMap mappers often tag individual platforms, entrances, or line intersections
+           as separate station nodes. We merge same-name stations within 500m into a single point.
+           Here's what that removed:</p>
+        <table>
+            <tr><th>Dataset</th><th>Before</th><th>After</th><th>Removed</th></tr>
+            <tr><td>Subways (strict)</td><td>17,977</td><td>16,195</td><td>1,782 (9.9%)</td></tr>
+            <tr><td>Subways</td><td>20,232</td><td>17,875</td><td>2,357 (11.6%)</td></tr>
+            <tr><td>All rail</td><td>114,870</td><td>84,877</td><td>29,993 (26.1%)</td></tr>
+            <tr><td>Airports</td><td>46,064</td><td>45,861</td><td>203 (0.4%)</td></tr>
+        </table>
+        <p>Tram and light rail stops had the most duplicates (26%). Airports were the cleanest.
+           The worst offenders by city:</p>
+        <table>
+            <tr><th>City</th><th>Extra nodes</th><th>Typical cause</th></tr>
+            <tr><td><a class="poi" href="index.html?lat=43.30&long=5.38&z=13">Marseille</a></td><td>97</td><td>Nearly every station had 5 nodes (one per entrance)</td></tr>
+            <tr><td><a class="poi" href="index.html?lat=1.35&long=103.82&z=12">Singapore</a></td><td>68</td><td>Multiple platforms tagged as separate stations</td></tr>
+            <tr><td><a class="poi" href="index.html?lat=48.86&long=2.35&z=12">Paris</a></td><td>58</td><td>Line intersections mapped as separate nodes</td></tr>
+        </table>
+
         <footer>
             Data from <a href="https://www.openstreetmap.org/" style="color:#6ea8fe">OpenStreetMap</a> via Overpass API.
             <a href="index.html" style="color:#6ea8fe">&larr; Back to map</a>
