@@ -118,6 +118,24 @@
             margin: 6px 0;
         }
 
+        #controls label[data-hint] {
+            position: relative;
+        }
+
+        #controls label[data-hint]:hover::after {
+            content: attr(data-hint);
+            position: absolute;
+            right: calc(100% + 8px);
+            top: 0;
+            background: rgba(0, 0, 0, 0.9);
+            color: #ddd;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font: 11px/1.4 sans-serif;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
         #stats {
             position: absolute;
             bottom: 30px;
@@ -210,32 +228,38 @@
         const bbox = (b) => `${b.getSouth()},${b.getWest()},${b.getNorth()},${b.getEast()}`;
         const QUERY_MODES = {
             'subway-nodes': {
-                label: 'Subway (nodes only)',
+                label: 'Subways (nodes)',
+                hint: 'Subway station nodes only — pre-loaded data',
                 static: true,
                 dataUrl: 'data/subway-nodes.json',
             },
             'subway-all': {
-                label: 'Subway (all geometries)',
+                label: 'Subways (all)',
+                hint: 'Subway stations including ways and relations — pre-loaded data',
                 static: true,
                 dataUrl: 'data/subway-all.json',
             },
             'subway-broad': {
-                label: 'Subway (broad match)',
+                label: 'Subways (broad)',
+                hint: 'Broader subway match including railway=station — pre-loaded data',
                 static: true,
                 dataUrl: 'data/subway-broad.json',
             },
             'all-rail': {
-                label: 'All rail transit',
+                label: 'All rail',
+                hint: 'Subways, light rail, monorail, tram stops — pre-loaded data',
                 static: true,
                 dataUrl: 'data/all-rail.json',
             },
             'airports': {
                 label: 'Airports',
+                hint: 'Aerodromes worldwide — pre-loaded data',
                 static: true,
                 dataUrl: 'data/airports.json',
             },
             'buses': {
                 label: 'Buses',
+                hint: 'Bus stops in current viewport — live query, may be slow or timeout',
                 buildQuery: (b) => `[out:json];(nwr["highway"="bus_stop"](${bbox(b)});nwr["amenity"="bus_station"](${bbox(b)}););out body center;`,
             },
         };
@@ -252,6 +276,7 @@
         const controls = document.getElementById('controls');
         for (const [key, mode] of Object.entries(QUERY_MODES)) {
             const label = document.createElement('label');
+            if (mode.hint) label.dataset.hint = mode.hint;
             const radio = document.createElement('input');
             radio.type = 'radio';
             radio.name = 'queryMode';
