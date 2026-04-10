@@ -318,30 +318,63 @@
         let lng = urlParams.get('long') || 10.75;
         let z = urlParams.get('z') || (window.innerWidth <= 768 ? 11 : 12);
         let chrisMode = urlParams.get('chris') === '1';
-        const QUERY_MODES = Object.fromEntries(
-            Object.entries(ALL_QUERY_MODES).filter(([, m]) => chrisMode || !m.devOnly)
-        );
         let currentMode = urlParams.get('mode') || 'subway-broad';
-        if (!QUERY_MODES[currentMode]) currentMode = 'subway-broad';
+        if (!ALL_QUERY_MODES[currentMode]) currentMode = 'subway-broad';
 
         // Build radio buttons
         const controls = document.getElementById('controls');
-        for (const [key, mode] of Object.entries(QUERY_MODES)) {
-            const label = document.createElement('label');
-            if (mode.hint) label.dataset.hint = mode.hint;
-            const radio = document.createElement('input');
-            radio.type = 'radio';
-            radio.name = 'queryMode';
-            radio.value = key;
-            radio.checked = key === currentMode;
-            radio.addEventListener('change', () => {
-                currentMode = key;
-                debouncedMoveEnd();
-            });
-            label.appendChild(radio);
-            label.append(' ' + mode.label);
-            controls.appendChild(label);
+        const modeContainer = document.createElement('div');
+        controls.appendChild(modeContainer);
+
+        function buildModeRadios() {
+            modeContainer.innerHTML = '';
+            const modes = Object.fromEntries(
+                Object.entries(ALL_QUERY_MODES).filter(([, m]) => chrisMode || !m.devOnly)
+            );
+            if (!modes[currentMode]) currentMode = 'subway-broad';
+            for (const [key, mode] of Object.entries(modes)) {
+                const label = document.createElement('label');
+                if (mode.hint) label.dataset.hint = mode.hint;
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = 'queryMode';
+                radio.value = key;
+                radio.checked = key === currentMode;
+                radio.addEventListener('change', () => {
+                    currentMode = key;
+                    debouncedMoveEnd();
+                });
+                label.appendChild(radio);
+                label.append(' ' + mode.label);
+                modeContainer.appendChild(label);
+            }
+            if (chrisMode) {
+                const badge = document.createElement('div');
+                badge.textContent = 'dev';
+                badge.style.cssText = 'font:bold 9px monospace;color:#f90;float:right;margin-top:2px';
+                modeContainer.prepend(badge);
+            }
         }
+        buildModeRadios();
+
+        // Triple-c chrismode toggle
+        let cPresses = 0;
+        let cTimer = null;
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+            if (e.key === 'c') {
+                cPresses++;
+                clearTimeout(cTimer);
+                cTimer = setTimeout(() => cPresses = 0, 500);
+                if (cPresses >= 3) {
+                    cPresses = 0;
+                    chrisMode = !chrisMode;
+                    buildModeRadios();
+                    updateURL();
+                    debouncedMoveEnd();
+                }
+            }
+        });
 
         controls.appendChild(document.createElement('hr'));
 
@@ -457,7 +490,7 @@
         function debouncedMoveEnd() {
             clearTimeout(debounceTimeout);
             debounceStart = performance.now();
-            const delay = QUERY_MODES[currentMode].static ? 100 : 500;
+            const delay = ALL_QUERY_MODES[currentMode].static ? 100 : 500;
             debounceTimeout = setTimeout(moveEnd, delay);
         }
 
@@ -493,7 +526,7 @@
         }
 
         async function fetchStaticStops() {
-            const mode = QUERY_MODES[currentMode];
+            const mode = ALL_QUERY_MODES[currentMode];
             if (cache[currentMode]) {
                 console.log("Using cached static stops");
                 return cache[currentMode].stops;
@@ -530,7 +563,7 @@
 
             const fetchBounds = expandBounds(bounds, 1.5);
             console.log("Fetching with expanded bounds:", fetchBounds.toBBoxString());
-            const query = QUERY_MODES[currentMode].buildQuery(fetchBounds);
+            const query = ALL_QUERY_MODES[currentMode].buildQuery(fetchBounds);
             console.log("Query mode:", currentMode);
             const encodedQuery = encodeURIComponent(query);
             const url = `https://overpass-api.de/api/interpreter?data=${encodedQuery}`;
@@ -589,7 +622,7 @@
         }
 
         async function fetchSubwayStops() {
-            return QUERY_MODES[currentMode].static
+            return ALL_QUERY_MODES[currentMode].static
                 ? fetchStaticStops()
                 : fetchOverpassStops();
         }
