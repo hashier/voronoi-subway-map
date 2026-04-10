@@ -137,8 +137,9 @@
         }
 
         #stats {
+            display: none;
             position: absolute;
-            bottom: 30px;
+            bottom: 50px;
             right: 10px;
             z-index: 1001;
             background: rgba(0, 0, 0, 0.7);
@@ -150,8 +151,11 @@
             pointer-events: none;
         }
 
+        #stats.visible {
+            display: block;
+        }
+
         #stats-toggle {
-            display: none;
             position: absolute;
             bottom: 30px;
             right: 10px;
@@ -166,9 +170,6 @@
         }
 
         @media (max-width: 768px) {
-            #stats { display: none; }
-            #stats-toggle { display: block; }
-            #stats.visible { display: block; bottom: 50px; }
             #bottom-links svg { width: 32px; height: 32px; }
         }
 
