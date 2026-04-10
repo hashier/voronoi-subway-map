@@ -45,6 +45,10 @@ Station data comes from [OpenStreetMap](https://www.openstreetmap.org/) via the 
 
 Downloads data from Overpass in 10-degree longitude strips (36 per mode) with retry logic. Skips already-downloaded strips on rerun. The normalization step (`scripts/normalize.jq`) deduplicates same-name stations within 500m.
 
+## Easter egg
+
+There's a hidden developer mode. Try pressing `c` three times. Or add `?chris=1` to the URL.
+
 ## Tech stack
 
 - [Leaflet](https://leafletjs.com/) 1.9.4 — map rendering
