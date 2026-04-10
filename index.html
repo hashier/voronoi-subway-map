@@ -318,6 +318,8 @@
         let lng = urlParams.get('long') || 10.75;
         let z = urlParams.get('z') || (window.innerWidth <= 768 ? 11 : 12);
         let chrisMode = urlParams.get('chris') === '1';
+        let voronoiAlpha = 125 / 255;
+        let showMarkers = true;
         let currentMode = urlParams.get('mode') || 'subway-broad';
         if (!ALL_QUERY_MODES[currentMode]) currentMode = 'subway-broad';
 
@@ -353,6 +355,20 @@
                 badge.textContent = 'dev';
                 badge.style.cssText = 'font:bold 9px monospace;color:#f90;float:right;margin-top:2px';
                 modeContainer.prepend(badge);
+
+                const alphaLabel = document.createElement('label');
+                alphaLabel.textContent = 'Opacity';
+                alphaLabel.style.marginTop = '4px';
+                const alphaSlider = document.createElement('input');
+                alphaSlider.type = 'range';
+                alphaSlider.min = '0';
+                alphaSlider.max = '100';
+                alphaSlider.value = String(Math.round(voronoiAlpha * 100));
+                alphaSlider.style.width = '100%';
+                alphaSlider.addEventListener('input', () => {
+                    voronoiAlpha = alphaSlider.value / 100;
+                    debouncedMoveEnd();
+                });
             }
         }
         buildModeRadios();
@@ -390,6 +406,35 @@
         bordersLabel.appendChild(bordersCheckbox);
         bordersLabel.append(' Cell borders');
         controls.appendChild(bordersLabel);
+
+        const markersLabel = document.createElement('label');
+        const markersCheckbox = document.createElement('input');
+        markersCheckbox.type = 'checkbox';
+        markersCheckbox.checked = showMarkers;
+        markersCheckbox.addEventListener('change', () => {
+            showMarkers = markersCheckbox.checked;
+            debouncedMoveEnd();
+        });
+        markersLabel.appendChild(markersCheckbox);
+        markersLabel.append(' Station markers');
+        controls.appendChild(markersLabel);
+
+        const alphaLabel = document.createElement('label');
+        alphaLabel.textContent = 'Opacity';
+        alphaLabel.style.marginTop = '4px';
+        const alphaSlider = document.createElement('input');
+        alphaSlider.type = 'range';
+        alphaSlider.min = '0';
+        alphaSlider.max = '100';
+        alphaSlider.value = String(Math.round(voronoiAlpha * 100));
+        alphaSlider.style.width = '100%';
+        alphaSlider.addEventListener('input', () => {
+            voronoiAlpha = alphaSlider.value / 100;
+            debouncedMoveEnd();
+        });
+        alphaLabel.appendChild(document.createElement('br'));
+        alphaLabel.appendChild(alphaSlider);
+        controls.appendChild(alphaLabel);
 
         const darkLabel = document.createElement('label');
         const darkCheckbox = document.createElement('input');
@@ -832,7 +877,7 @@
             );
 
             timePhase('fill', () => {
-                ctx.globalAlpha = 125 / 255;
+                ctx.globalAlpha = voronoiAlpha;
                 for (let i = 0; i < stops.length; i++) {
                     const cell = voronoi.cellPolygon(i);
                     if (!cell) continue;
@@ -862,6 +907,7 @@
 
             timePhase('markers', () => {
                 resetMarkers();
+                if (!showMarkers) return;
                 for (let i = 0; i < rawStops.length; i++) {
                     const stop = rawStops[i];
                     L.circleMarker([stop.lat, stop.lon], {
