@@ -272,22 +272,24 @@
 
         // Query modes
         const bbox = (b) => `${b.getSouth()},${b.getWest()},${b.getNorth()},${b.getEast()}`;
-        const QUERY_MODES = {
+        const ALL_QUERY_MODES = {
             'subway-nodes': {
                 label: 'Subways (strict)',
                 hint: 'Exact station=subway nodes only — fewest results, pre-loaded',
                 static: true,
                 dataUrl: 'data/subway-nodes.json',
+                devOnly: true,
             },
             'subway-all': {
-                label: 'Subways',
+                label: 'Subways (all nwr)',
                 hint: 'Subway stations (nodes, ways, relations) — pre-loaded',
                 static: true,
                 dataUrl: 'data/subway-all.json',
+                devOnly: true,
             },
             'subway-broad': {
-                label: 'Subways (broad)',
-                hint: 'Includes alternate tagging (railway=station) — more results, pre-loaded',
+                label: 'Subways',
+                hint: 'Subway stations worldwide — pre-loaded',
                 static: true,
                 dataUrl: 'data/subway-broad.json',
             },
@@ -315,8 +317,12 @@
         let lat = urlParams.get('lat') || 59.92;
         let lng = urlParams.get('long') || 10.75;
         let z = urlParams.get('z') || (window.innerWidth <= 768 ? 11 : 12);
-        let currentMode = urlParams.get('mode') || 'subway-all';
-        if (!QUERY_MODES[currentMode]) currentMode = 'subway-all';
+        let chrisMode = urlParams.get('chris') === '1';
+        const QUERY_MODES = Object.fromEntries(
+            Object.entries(ALL_QUERY_MODES).filter(([, m]) => chrisMode || !m.devOnly)
+        );
+        let currentMode = urlParams.get('mode') || 'subway-broad';
+        if (!QUERY_MODES[currentMode]) currentMode = 'subway-broad';
 
         // Build radio buttons
         const controls = document.getElementById('controls');
@@ -642,6 +648,8 @@
             url.searchParams.set('mode', currentMode);
             if (darkMode) url.searchParams.set('dark', '1');
             else url.searchParams.delete('dark');
+            if (chrisMode) url.searchParams.set('chris', '1');
+            else url.searchParams.delete('chris');
 
             history.replaceState(history.state, 'unused', url.href);
         }
