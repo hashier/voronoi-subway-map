@@ -356,20 +356,6 @@
                 badge.textContent = 'dev';
                 badge.style.cssText = 'font:bold 9px monospace;color:#f90;float:right;margin-top:2px';
                 modeContainer.prepend(badge);
-
-                const alphaLabel = document.createElement('label');
-                alphaLabel.textContent = 'Opacity';
-                alphaLabel.style.marginTop = '4px';
-                const alphaSlider = document.createElement('input');
-                alphaSlider.type = 'range';
-                alphaSlider.min = '0';
-                alphaSlider.max = '100';
-                alphaSlider.value = String(Math.round(voronoiAlpha * 100));
-                alphaSlider.style.width = '100%';
-                alphaSlider.addEventListener('input', () => {
-                    voronoiAlpha = alphaSlider.value / 100;
-                    debouncedMoveEnd();
-                });
             }
         }
         buildModeRadios();
