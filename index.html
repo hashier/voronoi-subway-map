@@ -503,12 +503,6 @@
                 map.fitBounds(e.geocode.bbox);
             })
             .addTo(map);
-        let markerLayer = L.layerGroup().addTo(map);
-        function resetMarkers() {
-            map.removeLayer(markerLayer);
-            markerLayer = L.layerGroup().addTo(map);
-        }
-
         // Canvas
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
@@ -831,11 +825,9 @@
             updateStats('fetch', performance.now() - fetchStart);
             spinner.classList.remove('visible');
             if (rawStops === null) {
-                resetMarkers();
                 return;
             }
             if (rawStops.length === 0) {
-                resetMarkers();
                 showBanner('No stations found in this area. Try zooming out or switching query mode.', { color: '#555' });
                 return;
             }
@@ -848,7 +840,6 @@
                 s.lon >= cullBounds.getWest() && s.lon <= cullBounds.getEast()
             );
             if (culledStops.length === 0) {
-                resetMarkers();
                 showBanner('No stations found in this area. Try zooming out or switching query mode.', { color: '#555' });
                 return;
             }
@@ -907,17 +898,16 @@
             }
 
             timePhase('markers', () => {
-                resetMarkers();
                 if (!showMarkers) return;
-                for (let i = 0; i < rawStops.length; i++) {
-                    const stop = rawStops[i];
-                    L.circleMarker([stop.lat, stop.lon], {
-                        radius: 4,
-                        fillColor: colors[i],
-                        color: 'white',
-                        weight: 1,
-                        fillOpacity: 1,
-                    }).addTo(markerLayer);
+                ctx.globalAlpha = 1;
+                for (let i = 0; i < stops.length; i++) {
+                    ctx.beginPath();
+                    ctx.arc(stops[i].x, stops[i].y, 4, 0, 2 * Math.PI);
+                    ctx.fillStyle = colors[i];
+                    ctx.fill();
+                    ctx.strokeStyle = 'white';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
                 }
             });
 
