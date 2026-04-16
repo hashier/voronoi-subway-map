@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Benchmark</title>
+    <style>
+        body { font: 14px/1.6 monospace; padding: 24px; background: #111; color: #ccc; margin: 0; }
+        h1 { color: #fff; font-size: 18px; margin: 0 0 4px; }
+        p { color: #888; margin: 0 0 20px; }
+        table { border-collapse: collapse; width: 100%; max-width: 900px; }
+        th { text-align: left; padding: 6px 12px; border-bottom: 2px solid #444; color: #fff; }
+        td { padding: 5px 12px; border-bottom: 1px solid #333; }
+        tr:hover td { background: #1a1a1a; }
+        .winner { color: #4caf50; font-weight: bold; }
+        .slowest { color: #f44336; }
+        .section { color: #aaa; background: #1a1a1a; font-style: italic; }
+        #status { color: #f90; margin-bottom: 16px; min-height: 1.6em; }
+        #canvas { display: none; }
+        .bar { display: inline-block; height: 10px; background: #4caf50; vertical-align: middle; margin-left: 6px; opacity: 0.6; }
+        .note { color: #666; font-size: 12px; margin-top: 16px; }
+    </style>
+</head>
+<body>
+    <h1>Voronoi Subway Map — Benchmark</h1>
+    <p>Measures JS computation time (Delaunay + Voronoi fill + markers) across 4 configurations × 2 datasets × 5 runs each.</p>
+    <div id="status">Loading data…</div>
+    <table id="results" style="display:none">
+        <thead>
+            <tr>
+                <th>Configuration</th>
+                <th>Dataset</th>
+                <th>Stations (culled)</th>
+                <th>project</th>
+                <th>delaunay</th>
+                <th>voronoi fill</th>
+                <th>markers</th>
+                <th>js total</th>
+            </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+    </table>
+    <canvas id="canvas" width="1280" height="800"></canvas>
+    <p class="note">All times are averages over 5 runs. "js total" = project + delaunay + colors + voronoi + fill + markers (no fetch, no debounce).</p>
+
+    <script type="module">
+        import { Delaunay } from "https://cdn.jsdelivr.net/npm/d3-delaunay@6/+esm";
+        import { schemeCategory10 } from "https://cdn.jsdelivr.net/npm/d3-scale-chromatic@3/+esm";
+
+        const RUNS = 5;
+        const WIDTH = 1280;
+        const HEIGHT = 800;
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const status = document.getElementById('status');
+
+        // Simulate a city-level viewport: Tokyo at zoom 12 (roughly)
+        // lat/lon bounds covering ~25km radius
+        const VIEWPORTS = {
+            'subway-broad': { minLat: 35.5, maxLat: 35.85, minLon: 139.5, maxLon: 139.9 },
+            'all-rail':     { minLat: 35.5, maxLat: 35.85, minLon: 139.5, maxLon: 139.9 },
+        };
+
+        // Simulated map projection: equirectangular scaled to canvas
+        function project(stops, viewport) {
+            const { minLat, maxLat, minLon, maxLon } = viewport;
+            const scaleX = WIDTH / (maxLon - minLon);
+            const scaleY = HEIGHT / (maxLat - minLat);
+            return stops.map(s => ({
+                x: (s.lon - minLon) * scaleX,
+                y: HEIGHT - (s.lat - minLat) * scaleY,
+            }));
+        }
+
+        function cull(stops, viewport, factor = 2) {
+            const latPad = (viewport.maxLat - viewport.minLat) * (factor - 1) / 2;
+            const lonPad = (viewport.maxLon - viewport.minLon) * (factor - 1) / 2;
+            const b = {
+                minLat: viewport.minLat - latPad, maxLat: viewport.maxLat + latPad,
+                minLon: viewport.minLon - lonPad, maxLon: viewport.maxLon + lonPad,
+            };
+            return stops.filter(s =>
+                s.lat >= b.minLat && s.lat <= b.maxLat &&
+                s.lon >= b.minLon && s.lon <= b.maxLon
+            );
+        }
+
+        function assignColors(n, delaunay) {
+            const colors = schemeCategory10;
+            const assigned = new Array(n).fill(null);
+            for (let i = 0; i < n; i++) {
+                const used = new Set();
+                for (const nb of delaunay.neighbors(i)) {
+                    if (assigned[nb] !== null) used.add(assigned[nb]);
+                }
+                for (const c of colors) {
+                    if (!used.has(c)) { assigned[i] = c; break; }
+                }
+            }
+            return assigned;
+        }
+
+        function time(fn) {
+            const t = performance.now();
+            fn();
+            return performance.now() - t;
+        }
+
+        async function runConfig(stops, viewport, useCulling, useCanvasMarkers) {
+            const source = useCulling ? cull(stops, viewport) : stops;
+            const projected = project(source, viewport);
+            const n = projected.length;
+
+            const times = { project: 0, delaunay: 0, colors: 0, voronoi: 0, fill: 0, markers: 0 };
+
+            for (let run = 0; run < RUNS; run++) {
+                // Allow browser to breathe between runs
+                await new Promise(r => setTimeout(r, 10));
+
+                ctx.clearRect(0, 0, WIDTH, HEIGHT);
+
+                times.project += time(() => {
+                    // Already projected above — re-project each run for fair measurement
+                    project(source, viewport);
+                });
+
+                let delaunay;
+                times.delaunay += time(() => {
+                    delaunay = new Delaunay(projected.map(s => [s.x, s.y]).flat());
+                });
+
+                let colors;
+                times.colors += time(() => {
+                    colors = assignColors(n, delaunay);
+                });
+
+                let voronoi;
+                times.voronoi += time(() => {
+                    voronoi = delaunay.voronoi([0, 0, WIDTH, HEIGHT]);
+                });
+
+                times.fill += time(() => {
+                    ctx.globalAlpha = 0.5;
+                    for (let i = 0; i < n; i++) {
+                        const cell = voronoi.cellPolygon(i);
+                        if (!cell) continue;
+                        ctx.beginPath();
+                        ctx.moveTo(cell[0][0], cell[0][1]);
+                        for (let j = 1; j < cell.length; j++) ctx.lineTo(cell[j][0], cell[j][1]);
+                        ctx.closePath();
+                        ctx.fillStyle = colors[i];
+                        ctx.fill();
+                    }
+                    ctx.globalAlpha = 1;
+                });
+
+                if (useCanvasMarkers) {
+                    times.markers += time(() => {
+                        for (let i = 0; i < n; i++) {
+                            ctx.beginPath();
+                            ctx.arc(projected[i].x, projected[i].y, 4, 0, 2 * Math.PI);
+                            ctx.fillStyle = colors[i];
+                            ctx.fill();
+                            ctx.strokeStyle = 'white';
+                            ctx.lineWidth = 1;
+                            ctx.stroke();
+                        }
+                    });
+                } else {
+                    // Simulate Leaflet circleMarker cost via DOM SVG circles
+                    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                    svg.style.cssText = 'position:absolute;top:-9999px;width:1280px;height:800px';
+                    times.markers += time(() => {
+                        for (let i = 0; i < n; i++) {
+                            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                            circle.setAttribute('cx', projected[i].x);
+                            circle.setAttribute('cy', projected[i].y);
+                            circle.setAttribute('r', '4');
+                            circle.setAttribute('fill', colors[i]);
+                            svg.appendChild(circle);
+                        }
+                        document.body.appendChild(svg);
+                    });
+                    document.body.removeChild(svg);
+                }
+            }
+
+            const avg = k => (times[k] / RUNS).toFixed(1);
+            const total = (times.project + times.delaunay + times.colors + times.voronoi + times.fill + times.markers) / RUNS;
+            return { n, project: avg('project'), delaunay: avg('delaunay'), voronoi: avg('voronoi'), fill: avg('fill'), markers: avg('markers'), total: total.toFixed(1) };
+        }
+
+        const CONFIGS = [
+            { label: 'Baseline (old)',        culling: false, canvasMarkers: false },
+            { label: 'Culling only',           culling: true,  canvasMarkers: false },
+            { label: 'Canvas markers only',    culling: false, canvasMarkers: true  },
+            { label: 'Both (current)',          culling: true,  canvasMarkers: true  },
+        ];
+
+        const DATASETS = ['subway-broad', 'all-rail'];
+
+        async function loadData(name) {
+            const r = await fetch(`data/${name}.json`);
+            return r.json();
+        }
+
+        async function run() {
+            const data = {};
+            for (const ds of DATASETS) {
+                status.textContent = `Loading ${ds}…`;
+                data[ds] = await loadData(ds);
+            }
+
+            const allResults = [];
+
+            for (const ds of DATASETS) {
+                for (const cfg of CONFIGS) {
+                    status.textContent = `Running: ${cfg.label} / ${ds}…`;
+                    await new Promise(r => setTimeout(r, 50));
+                    const result = await runConfig(data[ds], VIEWPORTS[ds], cfg.culling, cfg.canvasMarkers);
+                    allResults.push({ ds, cfg: cfg.label, ...result });
+                }
+            }
+
+            status.textContent = 'Done.';
+            renderTable(allResults);
+        }
+
+        function renderTable(results) {
+            const tbody = document.getElementById('tbody');
+
+            for (const ds of DATASETS) {
+                const dsResults = results.filter(r => r.ds === ds);
+                const totals = dsResults.map(r => parseFloat(r.total));
+                const minTotal = Math.min(...totals);
+                const maxTotal = Math.max(...totals);
+
+                const sep = document.createElement('tr');
+                sep.className = 'section';
+                sep.innerHTML = `<td colspan="8">— ${ds} (${results.find(r=>r.ds===ds).n} → ${results.filter(r=>r.ds===ds && r.cfg==='Both (current)')[0].n} stations after culling) —</td>`;
+                tbody.appendChild(sep);
+
+                for (const r of dsResults) {
+                    const total = parseFloat(r.total);
+                    const isWinner = total === minTotal;
+                    const isSlowest = total === maxTotal;
+                    const barWidth = Math.round((total / maxTotal) * 120);
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${r.cfg}</td>
+                        <td>${r.ds}</td>
+                        <td>${r.n.toLocaleString()}</td>
+                        <td>${r.project}ms</td>
+                        <td>${r.delaunay}ms</td>
+                        <td>${r.fill}ms</td>
+                        <td>${r.markers}ms</td>
+                        <td class="${isWinner ? 'winner' : isSlowest ? 'slowest' : ''}">${r.total}ms<span class="bar" style="width:${barWidth}px"></span></td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+            }
+
+            document.getElementById('results').style.display = '';
+        }
+
+        run().catch(e => { status.textContent = `Error: ${e.message}`; console.error(e); });
+    </script>
+</body>
+</html>
