@@ -788,8 +788,9 @@
                 `fill:     ${fmt('fill')}`,
                 `borders:  ${fmt('borders')}`,
                 `markers:  ${fmt('markers')}`,
-                `paint:    ${fmt('paint')}`,
-                `total:    ${fmt('total')}`,
+                `js:       ${fmt('js')}`,
+                `raf wait: ${fmt('raf wait')}`,
+                `total:    ${stats['js'] != null && stats['raf wait'] != null ? (stats['js'] + stats['raf wait']).toFixed(0) + 'ms' : '…'}`,
                 `debounce: ${fmt('debounce')}`,
                 `perceived:${fmt('perceived')}`,
             ];
@@ -914,11 +915,11 @@
             canvasRefLatLng = map.getCenter();
             canvasRefPoint = map.latLngToContainerPoint(canvasRefLatLng);
 
-            updateStats('total', performance.now() - totalStart);
+            updateStats('js', performance.now() - totalStart);
 
             const paintStart = performance.now();
             requestAnimationFrame(() => {
-                updateStats('paint', performance.now() - paintStart);
+                updateStats('raf wait', performance.now() - paintStart);
                 if (debounceMs) updateStats('perceived', performance.now() - debounceStart);
             });
         }
