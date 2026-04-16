@@ -22,7 +22,7 @@
 </head>
 <body>
     <h1>Voronoi Subway Map — Benchmark</h1>
-    <p>Measures JS computation time (Delaunay + Voronoi fill + markers) across 4 configurations × 2 datasets × 5 runs each.</p>
+    <p>Measures JS computation time and rAF wait across 4 configurations × 2 datasets × 5 runs each.</p>
     <div id="status">Loading data…</div>
     <table id="results" style="display:none">
         <thead>
@@ -35,12 +35,14 @@
                 <th>voronoi fill</th>
                 <th>markers</th>
                 <th>js total</th>
+                <th>raf wait</th>
+                <th>js + raf</th>
             </tr>
         </thead>
         <tbody id="tbody"></tbody>
     </table>
     <canvas id="canvas" width="1280" height="800"></canvas>
-    <p class="note">All times are averages over 5 runs. "js total" = project + delaunay + colors + voronoi + fill + markers (no fetch, no debounce).</p>
+    <p class="note">All times are averages over 5 runs. "js total" = project + delaunay + colors + voronoi + fill + markers. "raf wait" = time from end of JS until the next animation frame fires (includes browser paint &amp; composite). "js + raf" is the column used for ranking.</p>
 
     <script type="module">
         import { Delaunay } from "https://cdn.jsdelivr.net/npm/d3-delaunay@6/+esm";
@@ -110,7 +112,7 @@
             const projected = project(source, viewport);
             const n = projected.length;
 
-            const times = { project: 0, delaunay: 0, colors: 0, voronoi: 0, fill: 0, markers: 0 };
+            const times = { project: 0, delaunay: 0, colors: 0, voronoi: 0, fill: 0, markers: 0, raf: 0 };
 
             for (let run = 0; run < RUNS; run++) {
                 // Allow browser to breathe between runs
@@ -153,6 +155,7 @@
                     ctx.globalAlpha = 1;
                 });
 
+                let domSvg = null;
                 if (useCanvasMarkers) {
                     times.markers += time(() => {
                         for (let i = 0; i < n; i++) {
@@ -166,9 +169,11 @@
                         }
                     });
                 } else {
-                    // Simulate Leaflet circleMarker cost via DOM SVG circles
-                    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                    svg.style.cssText = 'position:absolute;top:-9999px;width:1280px;height:800px';
+                    // Simulate Leaflet circleMarker cost via DOM SVG circles.
+                    // Keep the SVG in the DOM until after rAF fires so the browser
+                    // actually has to paint/composite it — that's where the real cost is.
+                    domSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                    domSvg.style.cssText = 'position:fixed;top:0;left:0;width:1280px;height:800px;pointer-events:none;z-index:-1';
                     times.markers += time(() => {
                         for (let i = 0; i < n; i++) {
                             const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
@@ -176,17 +181,26 @@
                             circle.setAttribute('cy', projected[i].y);
                             circle.setAttribute('r', '4');
                             circle.setAttribute('fill', colors[i]);
-                            svg.appendChild(circle);
+                            domSvg.appendChild(circle);
                         }
-                        document.body.appendChild(svg);
+                        document.body.appendChild(domSvg);
                     });
-                    document.body.removeChild(svg);
                 }
+
+                // Measure rAF wait with the current frame's content still in the DOM/canvas
+                const rafStart = performance.now();
+                await new Promise(resolve => requestAnimationFrame(() => {
+                    times.raf += performance.now() - rafStart;
+                    resolve();
+                }));
+
+                if (domSvg) document.body.removeChild(domSvg);
             }
 
             const avg = k => (times[k] / RUNS).toFixed(1);
-            const total = (times.project + times.delaunay + times.colors + times.voronoi + times.fill + times.markers) / RUNS;
-            return { n, project: avg('project'), delaunay: avg('delaunay'), voronoi: avg('voronoi'), fill: avg('fill'), markers: avg('markers'), total: total.toFixed(1) };
+            const jsTotal = (times.project + times.delaunay + times.colors + times.voronoi + times.fill + times.markers) / RUNS;
+            const rafAvg = times.raf / RUNS;
+            return { n, project: avg('project'), delaunay: avg('delaunay'), voronoi: avg('voronoi'), fill: avg('fill'), markers: avg('markers'), jsTotal: jsTotal.toFixed(1), raf: rafAvg.toFixed(1), combined: (jsTotal + rafAvg).toFixed(1) };
         }
 
         const CONFIGS = [
@@ -230,20 +244,20 @@
 
             for (const ds of DATASETS) {
                 const dsResults = results.filter(r => r.ds === ds);
-                const totals = dsResults.map(r => parseFloat(r.total));
-                const minTotal = Math.min(...totals);
-                const maxTotal = Math.max(...totals);
+                const combineds = dsResults.map(r => parseFloat(r.combined));
+                const minCombined = Math.min(...combineds);
+                const maxCombined = Math.max(...combineds);
 
                 const sep = document.createElement('tr');
                 sep.className = 'section';
-                sep.innerHTML = `<td colspan="8">— ${ds} (${results.find(r=>r.ds===ds).n} → ${results.filter(r=>r.ds===ds && r.cfg==='Both (current)')[0].n} stations after culling) —</td>`;
+                sep.innerHTML = `<td colspan="10">— ${ds} (${results.find(r=>r.ds===ds).n} → ${results.filter(r=>r.ds===ds && r.cfg==='Both (current)')[0].n} stations after culling) —</td>`;
                 tbody.appendChild(sep);
 
                 for (const r of dsResults) {
-                    const total = parseFloat(r.total);
-                    const isWinner = total === minTotal;
-                    const isSlowest = total === maxTotal;
-                    const barWidth = Math.round((total / maxTotal) * 120);
+                    const combined = parseFloat(r.combined);
+                    const isWinner = combined === minCombined;
+                    const isSlowest = combined === maxCombined;
+                    const barWidth = Math.round((combined / maxCombined) * 120);
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td>${r.cfg}</td>
@@ -253,7 +267,9 @@
                         <td>${r.delaunay}ms</td>
                         <td>${r.fill}ms</td>
                         <td>${r.markers}ms</td>
-                        <td class="${isWinner ? 'winner' : isSlowest ? 'slowest' : ''}">${r.total}ms<span class="bar" style="width:${barWidth}px"></span></td>
+                        <td>${r.jsTotal}ms</td>
+                        <td>${r.raf}ms</td>
+                        <td class="${isWinner ? 'winner' : isSlowest ? 'slowest' : ''}">${r.combined}ms<span class="bar" style="width:${barWidth}px"></span></td>
                     `;
                     tbody.appendChild(tr);
                 }
