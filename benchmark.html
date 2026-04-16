@@ -22,7 +22,7 @@
 </head>
 <body>
     <h1>Voronoi Subway Map — Benchmark</h1>
-    <p>Measures JS computation time and rAF wait across 4 configurations × 2 datasets × 5 runs each.</p>
+    <p>Measures JS computation time and rAF wait across 4 configurations × 2 datasets × 2 zoom levels × 5 runs each.</p>
     <div id="status">Loading data…</div>
     <table id="results" style="display:none">
         <thead>
@@ -55,12 +55,18 @@
         const ctx = canvas.getContext('2d');
         const status = document.getElementById('status');
 
-        // Simulate a city-level viewport: Tokyo at zoom 12 (roughly)
-        // lat/lon bounds covering ~25km radius
-        const VIEWPORTS = {
-            'subway-broad': { minLat: 35.5, maxLat: 35.85, minLon: 139.5, maxLon: 139.9 },
-            'all-rail':     { minLat: 35.5, maxLat: 35.85, minLon: 139.5, maxLon: 139.9 },
-        };
+        // Simulate a city-level viewport: Tokyo at zoom ~12 (~35km across)
+        // and a country-level viewport: Japan at zoom ~7 (~1500km across)
+        const SCENARIOS = [
+            {
+                label: 'City zoom (Tokyo, z12)',
+                viewport: { minLat: 35.5, maxLat: 35.85, minLon: 139.5, maxLon: 139.9 },
+            },
+            {
+                label: 'Country zoom (Japan, z7)',
+                viewport: { minLat: 30.0, maxLat: 46.0, minLon: 129.0, maxLon: 146.0 },
+            },
+        ];
 
         // Simulated map projection: equirectangular scaled to canvas
         function project(stops, viewport) {
@@ -204,10 +210,10 @@
         }
 
         const CONFIGS = [
-            { label: 'Baseline (old)',        culling: false, canvasMarkers: false },
-            { label: 'Culling only',           culling: true,  canvasMarkers: false },
-            { label: 'Canvas markers only',    culling: false, canvasMarkers: true  },
-            { label: 'Both (current)',          culling: true,  canvasMarkers: true  },
+            { label: 'Baseline (old)',      culling: false, canvasMarkers: false },
+            { label: 'Culling only',         culling: true,  canvasMarkers: false },
+            { label: 'Canvas markers only',  culling: false, canvasMarkers: true  },
+            { label: 'Both (current)',        culling: true,  canvasMarkers: true  },
         ];
 
         const DATASETS = ['subway-broad', 'all-rail'];
@@ -226,12 +232,14 @@
 
             const allResults = [];
 
-            for (const ds of DATASETS) {
-                for (const cfg of CONFIGS) {
-                    status.textContent = `Running: ${cfg.label} / ${ds}…`;
-                    await new Promise(r => setTimeout(r, 50));
-                    const result = await runConfig(data[ds], VIEWPORTS[ds], cfg.culling, cfg.canvasMarkers);
-                    allResults.push({ ds, cfg: cfg.label, ...result });
+            for (const scenario of SCENARIOS) {
+                for (const ds of DATASETS) {
+                    for (const cfg of CONFIGS) {
+                        status.textContent = `Running: ${scenario.label} / ${cfg.label} / ${ds}…`;
+                        await new Promise(r => setTimeout(r, 50));
+                        const result = await runConfig(data[ds], scenario.viewport, cfg.culling, cfg.canvasMarkers);
+                        allResults.push({ scenario: scenario.label, ds, cfg: cfg.label, ...result });
+                    }
                 }
             }
 
@@ -242,36 +250,40 @@
         function renderTable(results) {
             const tbody = document.getElementById('tbody');
 
-            for (const ds of DATASETS) {
-                const dsResults = results.filter(r => r.ds === ds);
-                const combineds = dsResults.map(r => parseFloat(r.combined));
-                const minCombined = Math.min(...combineds);
-                const maxCombined = Math.max(...combineds);
+            for (const scenario of SCENARIOS) {
+                for (const ds of DATASETS) {
+                    const dsResults = results.filter(r => r.scenario === scenario.label && r.ds === ds);
+                    const combineds = dsResults.map(r => parseFloat(r.combined));
+                    const minCombined = Math.min(...combineds);
+                    const maxCombined = Math.max(...combineds);
+                    const baselineN = dsResults.find(r => r.cfg === 'Baseline (old)').n;
+                    const culledN = dsResults.find(r => r.cfg === 'Both (current)').n;
 
-                const sep = document.createElement('tr');
-                sep.className = 'section';
-                sep.innerHTML = `<td colspan="10">— ${ds} (${results.find(r=>r.ds===ds).n} → ${results.filter(r=>r.ds===ds && r.cfg==='Both (current)')[0].n} stations after culling) —</td>`;
-                tbody.appendChild(sep);
+                    const sep = document.createElement('tr');
+                    sep.className = 'section';
+                    sep.innerHTML = `<td colspan="10">— ${scenario.label} · ${ds} (${baselineN.toLocaleString()} → ${culledN.toLocaleString()} stations after culling) —</td>`;
+                    tbody.appendChild(sep);
 
-                for (const r of dsResults) {
-                    const combined = parseFloat(r.combined);
-                    const isWinner = combined === minCombined;
-                    const isSlowest = combined === maxCombined;
-                    const barWidth = Math.round((combined / maxCombined) * 120);
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${r.cfg}</td>
-                        <td>${r.ds}</td>
-                        <td>${r.n.toLocaleString()}</td>
-                        <td>${r.project}ms</td>
-                        <td>${r.delaunay}ms</td>
-                        <td>${r.fill}ms</td>
-                        <td>${r.markers}ms</td>
-                        <td>${r.jsTotal}ms</td>
-                        <td>${r.raf}ms</td>
-                        <td class="${isWinner ? 'winner' : isSlowest ? 'slowest' : ''}">${r.combined}ms<span class="bar" style="width:${barWidth}px"></span></td>
-                    `;
-                    tbody.appendChild(tr);
+                    for (const r of dsResults) {
+                        const combined = parseFloat(r.combined);
+                        const isWinner = combined === minCombined;
+                        const isSlowest = combined === maxCombined;
+                        const barWidth = Math.round((combined / maxCombined) * 120);
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${r.cfg}</td>
+                            <td>${r.ds}</td>
+                            <td>${r.n.toLocaleString()}</td>
+                            <td>${r.project}ms</td>
+                            <td>${r.delaunay}ms</td>
+                            <td>${r.fill}ms</td>
+                            <td>${r.markers}ms</td>
+                            <td>${r.jsTotal}ms</td>
+                            <td>${r.raf}ms</td>
+                            <td class="${isWinner ? 'winner' : isSlowest ? 'slowest' : ''}">${r.combined}ms<span class="bar" style="width:${barWidth}px"></span></td>
+                        `;
+                        tbody.appendChild(tr);
+                    }
                 }
             }
 
