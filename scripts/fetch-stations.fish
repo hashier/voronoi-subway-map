@@ -134,6 +134,15 @@ for i in (seq 1 2 (count $modes))
     set size (ls -lh $outfile | awk '{print $5}')
     echo "  $name: $count stations, $size"
 
+    # Record fetch timestamp in metadata.json
+    set fetch_time (date -u +%Y-%m-%dT%H:%M:%SZ)
+    set meta_file $data_dir/metadata.json
+    if test -f $meta_file
+        jq --arg mode $name --arg ts $fetch_time '.[$mode] = $ts' $meta_file >$meta_file.tmp && mv -f $meta_file.tmp $meta_file
+    else
+        echo "{\"$name\": \"$fetch_time\"}" >$meta_file
+    end
+
     if test (count $failed_strips) -gt 0
         echo "  WARNING: Failed strips: $failed_strips"
         set has_failures true

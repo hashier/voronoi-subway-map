@@ -348,6 +348,23 @@
         const modeContainer = document.createElement('div');
         controls.appendChild(modeContainer);
 
+        const dataDateEl = document.createElement('div');
+        dataDateEl.style.cssText = 'font:10px sans-serif;color:#777;margin-top:2px';
+        controls.appendChild(dataDateEl);
+
+        let dataMetadata = {};
+        fetch('data/metadata.json').then(r => r.ok ? r.json() : {}).then(meta => {
+            dataMetadata = meta;
+            updateDataDate();
+        }).catch(() => {});
+
+        function updateDataDate() {
+            const ts = dataMetadata[currentMode];
+            if (!ts) { dataDateEl.textContent = ''; return; }
+            const d = new Date(ts);
+            dataDateEl.textContent = 'Data from: ' + d.toLocaleDateString('en', { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+
         function buildModeRadios() {
             modeContainer.innerHTML = '';
             const modes = Object.fromEntries(
@@ -364,6 +381,7 @@
                 radio.checked = key === currentMode;
                 radio.addEventListener('change', () => {
                     currentMode = key;
+                    updateDataDate();
                     debouncedMoveEnd();
                 });
                 label.appendChild(radio);
