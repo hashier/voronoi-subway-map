@@ -49,7 +49,7 @@ for i in (seq 1 2 (count $modes))
         set strip_num (math $strip_num + 1)
         set strip_file $mode_raw_dir/strip-(printf '%03d' $strip_num).json
 
-        set query "[out:json][timeout:60][bbox:-90,$lon_start,90,$lon_end];$query_body"
+        set query "[out:json][timeout:180][bbox:-90,$lon_start,90,$lon_end];$query_body"
 
         echo -n "  [$strip_num/36] lon $lon_start to $lon_end... "
 
@@ -68,7 +68,7 @@ for i in (seq 1 2 (count $modes))
                 sleep $retry_delay
             end
 
-            curl --max-time 120 \
+            curl --max-time 240 \
                 --data-urlencode "data=$query" \
                 'https://overpass-api.de/api/interpreter' \
                 -o $strip_file 2>/dev/null
