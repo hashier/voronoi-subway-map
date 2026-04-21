@@ -25,8 +25,8 @@ set -l strip_delay 10
 set -l modes \
     'subway-nodes' 'node["station"="subway"];out body;' \
     'subway-all' 'nwr["station"="subway"];out body center;' \
-    'subway-broad' '(nwr["station"="subway"];nwr["railway"~"station|halt"]["subway"="yes"];);out body center;' \
-    'all-rail' '(nwr["station"~"subway|light_rail|monorail"];nwr["railway"~"station|tram_stop|halt"];);out body center;' \
+    'subway-broad' '(nwr["station"="subway"];nwr["railway"="station"]["subway"="yes"];nwr["railway"="halt"]["subway"="yes"];);out body center;' \
+    'all-rail' '(nwr["station"="subway"];nwr["station"="light_rail"];nwr["station"="monorail"];nwr["railway"="station"];nwr["railway"="tram_stop"];nwr["railway"="halt"];);out body center;' \
     'airports' 'nwr["aeroway"="aerodrome"];out body center;'
 
 set -l has_failures false
