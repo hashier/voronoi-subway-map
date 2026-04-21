@@ -3180,46 +3180,6 @@
     "name": "Jakarta Kota"
   },
   {
-    "lat": -5.0314473,
-    "lon": -42.4579964,
-    "name": "Altos"
-  },
-  {
-    "lat": -4.9307767,
-    "lon": -42.3005572,
-    "name": "Miradouro"
-  },
-  {
-    "lat": -4.8313904,
-    "lon": -42.1620416,
-    "name": "Campo Maior"
-  },
-  {
-    "lat": -4.6132542,
-    "lon": -42.0418377,
-    "name": "Sambaíba"
-  },
-  {
-    "lat": -4.4512814,
-    "lon": -41.9503997,
-    "name": "Capitão de Campos"
-  },
-  {
-    "lat": -4.2736340,
-    "lon": -41.7853793,
-    "name": "Piripiri"
-  },
-  {
-    "lat": -4.1281904,
-    "lon": -41.7790794,
-    "name": "Brasileira"
-  },
-  {
-    "lat": -3.9342790,
-    "lon": -41.7031429,
-    "name": "Piracuruca"
-  },
-  {
     "lat": -3.8948129,
     "lon": -38.6205965,
     "name": "Carlito Benevides"
@@ -3318,41 +3278,6 @@
     "lat": -3.7201317,
     "lon": -38.5352742,
     "name": "Central - Chico da Silva"
-  },
-  {
-    "lat": -3.6529245,
-    "lon": -41.5894976,
-    "name": "Deserto"
-  },
-  {
-    "lat": -3.4692791,
-    "lon": -41.5592394,
-    "name": "Cocal"
-  },
-  {
-    "lat": -3.3683950,
-    "lon": -41.5932296,
-    "name": "Freixeiras"
-  },
-  {
-    "lat": -3.1928215,
-    "lon": -41.6464545,
-    "name": "Bom Princípio"
-  },
-  {
-    "lat": -2.9050283,
-    "lon": -41.7717387,
-    "name": "Parnaíba"
-  },
-  {
-    "lat": -2.8942573,
-    "lon": -41.7203416,
-    "name": "Floriópolis"
-  },
-  {
-    "lat": -2.8814703,
-    "lon": -41.6668152,
-    "name": "Luís Correia"
   },
   {
     "lat": -2.2608799,
