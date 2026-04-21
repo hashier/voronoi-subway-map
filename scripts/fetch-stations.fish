@@ -77,11 +77,15 @@ for i in (seq 1 2 (count $modes))
                 continue
             end
 
-            # Verify valid JSON with elements array
-            jq -e '.elements' $strip_file >/dev/null 2>&1
-            if test $status -eq 0
-                set success true
-                break
+            # Verify valid JSON with elements array and no timeout/error remark
+            if jq -e '.elements' $strip_file >/dev/null 2>&1
+                set remark (jq -r '.remark // ""' $strip_file 2>/dev/null)
+                if string match -q '*timed out*' $remark; or string match -q '*runtime error*' $remark
+                    echo -n "server error: $remark — "
+                else
+                    set success true
+                    break
+                end
             end
         end
 
