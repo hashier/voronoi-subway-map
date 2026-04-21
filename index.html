@@ -844,7 +844,7 @@
                 showBanner('No stations found in this area. Try zooming out or switching query mode.', { color: '#555' });
                 return;
             }
-            stationCount = culledStops.length;
+            stationCount = rawStops.length;
 
             const stops = timePhase('project', () =>
                 culledStops.map((stop) => {
