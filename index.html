@@ -540,6 +540,20 @@
                 map.fitBounds(e.geocode.bbox);
             })
             .addTo(map);
+
+        const locateBtn = L.DomUtil.create('a', 'leaflet-control-zoom-locate', map.zoomControl.getContainer());
+        locateBtn.title = 'Go to my location';
+        locateBtn.role = 'button';
+        locateBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>';
+        locateBtn.style.cssText = 'display:flex;align-items:center;justify-content:center;margin-top:4px;';
+        L.DomEvent.on(locateBtn, 'click', L.DomEvent.stop);
+        L.DomEvent.on(locateBtn, 'click', () => map.locate());
+        map.on('locationfound', (e) => {
+            map.setView(e.latlng, window.innerWidth <= 768 ? 11 : 12);
+        });
+        map.on('locationerror', (e) => {
+            showBanner(e.code === 1 ? 'Location access denied.' : 'Could not determine your location.');
+        });
         // Canvas
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
