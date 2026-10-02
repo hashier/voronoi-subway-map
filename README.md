@@ -24,6 +24,7 @@ The same Delaunay structure powers the floating station label: `delaunay.find(x,
 - **Dark mode** with CartoDB Dark Matter tiles
 - **Copy link** to share your current view (lat/lon/zoom/mode preserved in URL)
 - **Performance stats** overlay with per-phase timing breakdown
+- **[Benchmark](https://nearest-station.loessl.org/benchmark.html)** page measuring render time across datasets and zoom levels
 - **[Fun facts](https://nearest-station.loessl.org/fun-facts.html)** page with data insights and clickable points of interest
 
 ## Data

@@ -1,6 +1,6 @@
 #!/usr/bin/env fish
 
-# Fetches worldwide subway/rail station data from Overpass API
+# Fetches worldwide subway, rail and airport data from Overpass API
 # Downloads in 10-degree longitude strips for reliability
 # Saves raw responses to data/raw/{mode}/ and normalized JSON to data/
 
@@ -15,11 +15,14 @@ set -l retry_delay 3
 set -l strip_delay 10
 
 # Mode definitions: name followed by query body (bbox injected per strip)
-# Names here match data file names and keys in index.html QUERY_MODES.
+# Names here match data file names and keys in index.html ALL_QUERY_MODES.
+# Keys describe the OSM query, labels describe what users see, so they
+# intentionally differ. Don't rename keys to match labels: that breaks
+# data file paths and existing ?mode= URLs.
 # User-facing labels (in index.html):
 #   subway-nodes  → "Subways (strict)"   — exact station=subway nodes only
-#   subway-all    → "Subways"            — nodes, ways, relations
-#   subway-broad  → "Subways (broad)"    — includes alternate tagging
+#   subway-all    → "Subways (all nwr)"  — nodes, ways, relations
+#   subway-broad  → "Subways"            — includes alternate tagging
 #   all-rail      → "All rail"           — adds light rail, monorail, tram
 #   airports      → "Airports"           — aerodromes worldwide
 set -l modes \
