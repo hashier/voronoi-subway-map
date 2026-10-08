@@ -6,7 +6,7 @@ Interactive map showing colored regions for transit stations worldwide. Each col
 
 **Try it live: [nearest-station.loessl.org](https://nearest-station.loessl.org/)**
 
-![Example of Stockholm](img/img.jpg)
+![Four example views from the worldwide map: Paris, London, Tokyo and New York](img/cities.jpg)
 
 ## How it works
 
@@ -26,6 +26,8 @@ The same Delaunay structure powers the floating station label: `delaunay.find(x,
 - **Performance stats** overlay with per-phase timing breakdown
 - **[Benchmark](https://nearest-station.loessl.org/benchmark.html)** page measuring render time across datasets and zoom levels
 - **[Fun facts](https://nearest-station.loessl.org/fun-facts.html)** page with data insights and clickable points of interest
+
+![Paris with the settings panel and the performance stats overlay open](img/ui.jpg)
 
 ## Data
 
